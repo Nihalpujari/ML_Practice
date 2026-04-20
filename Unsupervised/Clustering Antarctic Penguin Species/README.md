@@ -23,7 +23,7 @@ The dataset used is the **Palmer Penguins Dataset**, which contains measurements
 - Python 🐍
 - Pandas
 - NumPy
-- Matplotlib / Seaborn
+- Matplotlib 
 - Scikit-learn (Pipeline, PCA, Clustering)
 
 ---
@@ -32,7 +32,7 @@ The dataset used is the **Palmer Penguins Dataset**, which contains measurements
 
 ### 1. Data Preprocessing
 - Handle missing values (NaN removal)
-- Convert categorical data to numerical (if required)
+- Convert categorical data to numerical 
 - Feature scaling
 
 ### 2. Pipeline Creation
