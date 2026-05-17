@@ -1,5 +1,6 @@
 from sklearn.feature_extraction.text import CountVectorizer
 from nltk.tokenize import word_tokenize 
+from nltk.corpus import stopwords
 import string
 from matplotlib import pyplot as plt
 import numpy as np
@@ -12,7 +13,9 @@ reviews = [
 def preprocess(text):
     text=text.lower()
     tokens=word_tokenize(text)
-    clean=[word for word in tokens if text not in string.punctuation]
+    stop_word=stopwords.words('english')
+    clean=[word for word in tokens if word not in string.punctuation]
+    clean=[word for word in clean if word not in stop_word]
     return " ".join(clean)
     
 cleaned_reviews = [preprocess(review) for review in reviews]
@@ -30,5 +33,5 @@ plt.bar(words,count)
 plt.xlabel('Words') 
 plt.ylabel('Count')
 plt.title('Word Count in Reviews')
-plt.xticks(rotation=45)
+plt.xticks(rotation=90)
 plt.show()
