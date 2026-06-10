@@ -7,3 +7,8 @@ __pycache__/
 .ipynb_checkpoints/
 venv/
 .env
+ml_env/
+venv/
+env/
+__pycache__/
+*.pyc

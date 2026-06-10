@@ -38,10 +38,13 @@ ML_Practice/
 ├── 🧠 supervised/              Classification & regression (sklearn)
 ├── 🔍 Unsupervised/            K-Means clustering & PCA
 ├── ⚙️  Hyperparameter tuning/  GridSearchCV & RandomizedSearchCV
-├── 🗣️  NLP/                    Text processing, embeddings & transformers
+├── 🗣️  NLP/                    Text processing, embeddings, transformers, RAG & agents
+├── 🔤 NLP using spaCy/         Getting started with spaCy models
 ├── 🚢 Titanic/                 End-to-end Kaggle-style project
 ├── 🌍 real data/               Practice on real-world scraped datasets
-└── 📓 all.ipynb                Consolidated multi-experiment notebook
+├── 📓 all.ipynb                Consolidated multi-experiment notebook
+└── 📓 Common Deep Learning     Common deep learning hyperparameters reference
+       Hyper-Parameters.ipynb
 ```
 
 Each top-level folder has its **own README** with a deeper walkthrough — click into one to see what's inside.
@@ -146,9 +149,14 @@ flowchart TD
 - Stemming, lemmatization, stop-word removal
 - Bag-of-Words, TF-IDF and N-grams
 - GloVe word embeddings + PCA visualization
-- Named entity recognition & parsing
-- **Hugging Face** transformers — sentiment, zero-shot, QNLI
+- Named entity recognition & parsing (spaCy + Hugging Face models)
+- **Hugging Face** transformers — sentiment, zero-shot, QNLI, CoLA, QQP
+- Question answering — extractive (DistilBERT/SQuAD) and abstractive (HotpotQA)
+- Sequence generation — search completion, summarization, translation
 - Neural networks: RNNs, LSTMs, Word2Vec, Transformers (Keras)
+- BM25 sparse retrieval and dense retrieval with sentence embeddings
+- RAG (Retrieval-Augmented Generation) pipelines
+- LLM Agents — research, analyst, support, LangChain, LangGraph
 - Mini projects: movie recommender, WhatsApp chat analysis, job applications
 
 </details>

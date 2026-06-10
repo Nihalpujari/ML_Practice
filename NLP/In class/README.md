@@ -20,6 +20,12 @@
 | 📂 [`RNN/`](./RNN/) | Step-by-step Recurrent Neural Network |
 | 📂 [`LSTM/`](./LSTM/) | Long Short-Term Memory networks |
 | 📂 [`Transformer_keras/`](./Transformer_keras/) | Transformer architecture in Keras |
+| 📂 [`BM25/`](./BM25/) | Sparse retrieval with BM25 keyword matching |
+| 📂 [`Dense_Retrival/`](./Dense_Retrival/) | Dense retrieval with sentence embeddings + PDF chunking |
+| 📂 [`RAG/`](./RAG/) | Retrieval-Augmented Generation pipelines |
+| 📂 [`Agents/`](./Agents/) | LLM-powered agents — research, analyst, support, LangChain, LangGraph |
+| 📂 [`pdf reading and ranking/`](./pdf%20reading%20and%20ranking/) | PDF text extraction and semantic ranking |
+| 📂 [`week 3/`](./week%203/) | MLP vs RNN vs LSTM vs GRU comparison (PyTorch) |
 | 📂 [`dump/`](./dump/) | Misc / scratch notebooks |
 
 ---
@@ -37,6 +43,9 @@ flowchart LR
     G --> H[LSTM]
     H --> I[Transformer_keras]
     I --> J[Neural network → RNN translation]
+    I --> K[BM25 & Dense Retrieval]
+    K --> L[RAG]
+    L --> M[Agents]
 ```
 
 ---

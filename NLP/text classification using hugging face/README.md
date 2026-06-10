@@ -13,6 +13,8 @@
 | 📂 [`sentiment analysis pipelines/`](./sentiment%20analysis%20pipelines/) | `sentiment-analysis` | Positive / negative classification |
 | 📂 [`one shot classifier/`](./one%20shot%20classifier/) | `zero-shot-classification` | Classify into any labels — no fine-tuning needed |
 | 📂 [`QNLI/`](./QNLI/) | QNLI model | Question-answer entailment |
+| 📂 [`grammer checker using CoLA/`](./grammer%20checker%20using%20CoLA/) | `text-classification` | Grammatical acceptability checking |
+| 📂 [`question similarity/`](./question%20similarity/) | `text-classification` | Detect duplicate / paraphrase questions (QQP) |
 
 ---
 

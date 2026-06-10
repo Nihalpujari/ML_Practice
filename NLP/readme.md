@@ -28,9 +28,11 @@ flowchart TD
     E --> F["🔍 String similarity"]
     F --> G["🧭 Parsing & NER"]
     G --> H["🎬 Recommendation system"]
-    G --> I["🤗 Hugging Face classification"]
+    G --> I["🤗 Hugging Face classification & QA"]
     I --> J["🧠 In Class: RNN / LSTM / Transformer"]
-    J --> K["💬 Projects: WhatsApp / Jobs"]
+    J --> K["🔎 BM25 / Dense Retrieval / RAG"]
+    K --> L["🤖 Agents"]
+    L --> M["💬 Projects: WhatsApp / Jobs"]
 ```
 
 ---
@@ -46,12 +48,15 @@ flowchart TD
 | 📂 [`module 4 feature extraction/`](./module%204%20feature%20extraction/) | More BoW | A focused BoW notebook |
 | 📂 [`string similarity (distances)/`](./string%20similarity%20%28distances%29/) | Comparing strings | Edit distance, Jaccard, cosine |
 | 📂 [`parsing/`](./parsing/) | Syntactic structure | POS tagging, dependency parsing |
-| 📂 [`named entity recognition and extraction/`](./named%20entity%20recognition%20and%20extraction/) | NER | Extract people, places, orgs from text |
+| 📂 [`named entity recognition and extraction using spacy/`](./named%20entity%20recognition%20and%20extraction%20using%20spacy/) | NER | Extract people, places, orgs from text |
+| 📂 [`POS NER using models/`](./POS%20NER%20using%20models/) | Transformer-based POS & NER | POS tagging and NER using Hugging Face models |
+| 📂 [`question answering/`](./question%20answering/) | QA pipelines | Extractive (DistilBERT/SQuAD) and abstractive (HotpotQA) QA |
+| 📂 [`sequence generation tasks/`](./sequence%20generation%20tasks/) | Text generation | Search completion, summarization, translation |
 | 📂 [`Recommendation_System/`](./Recommendation_System/) | 🎬 Project | TF-IDF + cosine similarity movie recommender |
-| 📂 [`text classification using hugging face/`](./text%20classification%20using%20hugging%20face/) | Transformers | Sentiment, zero-shot, QNLI pipelines |
+| 📂 [`text classification using hugging face/`](./text%20classification%20using%20hugging%20face/) | Transformers | Sentiment, zero-shot, QNLI, CoLA, QQP pipelines |
 | 📂 [`jobs_applicants_project/`](./jobs_applicants_project/) | 💼 Project | NLP on job-applicant data |
 | 📂 [`whatapp project/`](./whatapp%20project/) | 💬 Project | WhatsApp chat analysis |
-| 📂 [`In Class/`](./In%20Class/) | 🎓 Lectures | Classroom material — RNN, LSTM, Transformer, Word2Vec |
+| 📂 [`In Class/`](./In%20Class/) | 🎓 Lectures | RNN, LSTM, Transformer, Word2Vec, RAG, Agents |
 
 ---
 
@@ -76,13 +81,19 @@ flowchart TD
 - Mini search engine prototype
 
 ### 🔴 Advanced
-- **Named Entity Recognition** with spaCy
+- **Named Entity Recognition** with spaCy and Hugging Face models
+- **POS tagging** with spaCy and transformer models
 - **Syntactic parsing** — POS tags & dependency trees
-- **Hugging Face pipelines** — `sentiment-analysis`, zero-shot, QNLI
+- **Hugging Face pipelines** — sentiment, zero-shot, QNLI, CoLA grammar checking, QQP question similarity
+- **Question Answering** — extractive (DistilBERT/SQuAD) and abstractive (HotpotQA)
+- **Sequence generation** — search completion, text summarization, translation
 - **Word2Vec** training
 - **RNN** / **LSTM** sequence modelling
 - **Transformer (Keras)** from scratch
 - **RNN-based translation** (TimeDistributed & single-word)
+- **BM25** sparse retrieval and **dense retrieval** with sentence embeddings
+- **RAG** (Retrieval-Augmented Generation) pipelines
+- **LLM Agents** — research, analyst, support, LangChain, LangGraph
 
 ### 🎯 Projects
 - 🎬 Movie recommendation system (TF-IDF + cosine)

@@ -27,8 +27,8 @@ This project implements a lightweight recommendation engine from scratch using T
 ## Project Structure
 
 ```
-search_recommendation_system.ipynb   # Main notebook
-README.md                            # This file
+recommendation_system.ipynb   # Main notebook
+README.md                     # This file
 ```
 
 ---
