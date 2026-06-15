@@ -29,3 +29,6 @@ task 1
 
 Live Data Collection 
 -The system automatically collect information from at least three public sources.
+    I used DDGs and news,reddit, competitor, company website for the source of data
+    removed duplicate
+    stored in JSON file(lufthansa_data.json)
