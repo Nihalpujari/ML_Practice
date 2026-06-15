@@ -1,0 +1,31 @@
+i am taking Lufthansa as my company 
+data collection : i dont know how to collect live data but i remember i have studied in nlp
+
+• What are the major opportunities for the company? 
+• What are the biggest risks? 
+• What are competitors doing? 
+• Which technologies or trends should management monitor? 
+• What strategic actions should be prioritized? 
+• What evidence supports these recommendations? 
+
+-----------------------------------------------------------------------------------------------------------------------------------------------
+| Day |             Phase            |                          Deliverable                            |        Reuses Your Notebook          |
+|-----|------------------------------|-----------------------------------------------------------------|--------------------------------------|
+| 1   | Setup                        | Install Ollama, pull llama3.1:8b, test one prompt               | New (guided setup)                   |
+| 1   | Task 1: Data Collection      | Collector → save raw documents to JSON                          | Agents.ipynb (DDGS/Wiki)             |
+| 1   | Task 3: Processing           | Clean, deduplicate, chunk, and embed documents                  | Dense_Retrival.ipynb, FAISS notebook |
+| 1   | Task 2: Storage              | Load into ChromaDB and build BM25 index                         | VectorDB Assignment 2                |
+| 3   | Retrieval Layer              | Implement and test hybrid search function                       | BM25 + Dense_Retrival                |
+| 4   | Task 4: Analytics Engine     | Classification and sentiment analysis over all documents        | Agents.ipynb                         |
+| 4-5 | Task 5 & 6: CEO Agent        |  RAG pipeline + structured recommendations                      | RAG.ipynb (upgraded)                 |
+| 6   | Dashboard                    | Build 7-section Streamlit dashboard                             | New (guided implementation)          |
+| 7   | Documentation & Presentation | README, architecture diagram, data-flow diagram, oral rehearsal | New                                  |
+-----------------------------------------------------------------------------------------------------------------------------------------------
+
+
+15/06/2026
+
+task 1
+
+Live Data Collection 
+-The system automatically collect information from at least three public sources.
