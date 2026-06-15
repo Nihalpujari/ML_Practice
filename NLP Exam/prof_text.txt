@@ -1,0 +1,23 @@
+NLP Examination
+General: Dear Students,
+Please find attached the description of your final examination project for the module.
+This assessment is designed to give you the opportunity to apply the concepts we have covered throughout the course, including information retrieval, embeddings, vector databases, Retrieval-Augmented Generation (RAG), Large Language Models, AI agents, dashboard development, and strategic reasoning.
+ 
+Unlike traditional assignments, this project focuses not only on technical implementation but also on your ability to transform real-world information into actionable insights. Your goal is to build an AI Strategic Intelligence Agent capable of collecting live information from a selected industry, analyzing developments, identifying opportunities and risks, and generating evidence-based recommendations.
+ 
+Please read the project description carefully before starting.
+A few important points:
+This is an individual project.
+The use of paid commercial LLM APIs (e.g., OpenAI, Gemini, Anthropic) as the primary reasoning engine is not permitted.
+You are expected to use open-source or freely accessible models.
+The final submission must include all required deliverables listed in the project description.
+During the final examination, you will be required to demonstrate your solution, answer conceptual questions, and perform live coding tasks based on your implementation.
+Please note that the oral examination is an important component of the assessment. It is therefore essential that you fully understand every aspect of your solution. Simply assembling components without understanding how they work will not be sufficient.
+My recommendation is to start early, define a clear scope, and focus on building a robust and well-explained solution rather than an overly complex one.
+I am looking forward to seeing the different approaches and creative solutions you develop.
+If you have questions regarding the project requirements, please raise them well before the submission deadline. (22.06 23:59 hrs)
+Good luck and enjoy the challenge!
+Best regards,
+Swati Chandna
+
+ 
