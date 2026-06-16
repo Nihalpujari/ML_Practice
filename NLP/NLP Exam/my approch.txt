@@ -13,7 +13,7 @@ data collection : i dont know how to collect live data but i remember i have stu
 |-----|------------------------------|-----------------------------------------------------------------|--------------------------------------|
 | 1   | Setup                        | Install Ollama, pull llama3.1:8b, test one prompt               | New (guided setup)                   |
 | 1   | Task 1: Data Collection      | Collector → save raw documents to JSON                          | Agents.ipynb (DDGS/Wiki)             |
-| 1   | Task 3: Processing           | Clean, deduplicate, chunk, and embed documents                  | Dense_Retrival.ipynb, FAISS notebook |
+| 2   | Task 3: Processing           | Clean, deduplicate, chunk, and embed documents                  | Dense_Retrival.ipynb, FAISS notebook |
 | 1   | Task 2: Storage              | Load into ChromaDB and build BM25 index                         | VectorDB Assignment 2                |
 | 3   | Retrieval Layer              | Implement and test hybrid search function                       | BM25 + Dense_Retrival                |
 | 4   | Task 4: Analytics Engine     | Classification and sentiment analysis over all documents        | Agents.ipynb                         |
@@ -32,3 +32,8 @@ Live Data Collection
     I used DDGs and news,reddit, competitor, company website for the source of data
     removed duplicate
     stored in JSON file(lufthansa_data.json)
+
+task 2
+- Knowledge Repository
+    I am using CromaDB to collect the information to store and index it
+    
