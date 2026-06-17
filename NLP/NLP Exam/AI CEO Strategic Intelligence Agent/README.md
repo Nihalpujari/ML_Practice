@@ -33,7 +33,7 @@ evidence-based recommendations** — presented in an interactive dashboard.
 | Task 2 — Knowledge Repository (store + index) | ✅ Done |
 | Task 3 — Information Processing (clean + embed) | ✅ Done (folded into Task 2) |
 | Retrieval Layer — Semantic + Hybrid (BM25 + dense) | ✅ Done |
-| Task 4 — Strategic Intelligence Engine (classify + sentiment) | 🔶 In progress |
+| Task 4 — Strategic Intelligence Engine (classify + sentiment) | ✅ Done |
 | Task 5 & 6 — AI CEO Agent + Evidence-Based Recommendations | ⬜ Planned |
 | Executive Dashboard (Streamlit, 7 sections) | ⬜ Planned |
 
@@ -64,7 +64,7 @@ evidence-based recommendations** — presented in an interactive dashboard.
 | Keyword retrieval | **rank_bm25** (`BM25Okapi`) | sparse keyword matching |
 | Similarity / utils | **scikit-learn** (`cosine_similarity`, `PCA`) | scoring + visualization |
 | Classification | **transformers** (`facebook/bart-large-mnli`) | zero-shot Opportunity/Risk/Trend |
-| Sentiment | **transformers** (`distilbert-base-uncased-finetuned-sst-2-english`) | positive/negative tone |
+| Sentiment | **transformers** (`cardiffnlp/twitter-roberta-base-sentiment-latest`) | 3-class sentiment: negative / neutral / positive |
 | Reasoning LLM | **Ollama** (`llama3.1:8b`) | local, open-source reasoning engine |
 | Dashboard | **Streamlit** | interactive executive dashboard |
 | Visualization | **matplotlib** | charts |
@@ -136,7 +136,7 @@ The system uses **five AI/ML components**, each with a specific job:
 | Embedding | `all-MiniLM-L6-v2` (transformer) | turn text into 384-dim meaning vectors |
 | Sparse retrieval | BM25 (algorithm, not ML) | exact keyword matching |
 | Classification | `bart-large-mnli` (zero-shot via NLI) | Opportunity / Risk / Trend |
-| Sentiment | `distilbert-sst-2` | positive / negative tone |
+| Sentiment | `cardiffnlp/twitter-roberta-base-sentiment-latest` | negative / neutral / positive tone |
 | Reasoning & generation | `llama3.1:8b` (LLM via Ollama) | reason over evidence, write recommendations |
 
 **Two layers of intelligence:**
@@ -199,16 +199,23 @@ neutral on conceptual ones.
 needed. Kept to 3 main categories for robustness (subtypes available on demand as a two-level
 classifier, but more labels lower confidence).
 
-**11. Small models for labeling, LLM for reasoning.** Classification/sentiment over ~200 docs needs
+**11. Three-class sentiment, not binary.** The initial choice (`distilbert-sst-2`) has only
+positive/negative and was trained on movie reviews, so it forced neutral, factual pages (e.g. report
+listings) into positive/negative with misleadingly high confidence. Switched to
+`cardiffnlp/twitter-roberta-base-sentiment-latest` (negative/neutral/positive, trained on social
+text) so neutral documents are correctly labeled neutral — confirmed by the result distribution
+(neutral 118, positive 55, negative 27).
+
+**12. Small models for labeling, LLM for reasoning.** Classification/sentiment over ~200 docs needs
 speed, not reasoning — small specialized models are ideal. The 8B LLM is reserved for Task 5, where
 the system must read evidence, reason, and *write* justified recommendations — something classifiers
 cannot do.
 
-**12. Local open-source LLM (Ollama / Llama 3.1 8B).** Required by the brief (no paid APIs). Runs
+**13. Local open-source LLM (Ollama / Llama 3.1 8B).** Required by the brief (no paid APIs). Runs
 locally and free, with strong enough reasoning for executive recommendations. (Model storage
 relocated off the system drive via `OLLAMA_MODELS`.)
 
-**13. Streamlit for the dashboard.** Pure-Python, minimal boilerplate — faster to build a
+**14. Streamlit for the dashboard.** Pure-Python, minimal boilerplate — faster to build a
 data-centric executive dashboard than Dash's callback wiring.
 
 ---
