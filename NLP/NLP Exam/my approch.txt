@@ -8,19 +8,24 @@ data collection : DDGs
 • What strategic actions should be prioritized?
 • What evidence supports these recommendations?
 
------------------------------------------------------------------------------------------------------------------------------------------------
-| Day |             Phase            |                          Deliverable                            |        Reuses Your Notebook          |
-|-----|------------------------------|-----------------------------------------------------------------|--------------------------------------|
-| 1   | Setup                        | Install Ollama, pull llama3.1:8b, test one prompt               | New (guided setup)                   |
-| 1   | Task 1: Data Collection      | Collector → save raw documents to JSON                          | Agents.ipynb (DDGS/Wiki)             |
-| 2   | Task 3: Processing           | Clean, deduplicate, chunk, and embed documents                  | Dense_Retrival.ipynb, FAISS notebook |
-| 2   | Task 2: Storage              | Load into ChromaDB and build BM25 index                         | VectorDB Assignment 2                |
-| 3   | Retrieval Layer              | Implement and test hybrid search function                       | BM25 + Dense_Retrival                |
-| 3   | Task 4: Analytics Engine     | Classification and sentiment analysis over all documents        | Agents.ipynb                         |
-| 4-5 | Task 5 & 6: CEO Agent        |  RAG pipeline + structured recommendations                      | RAG.ipynb (upgraded)                 |
-| 6   | Dashboard                    | Build 7-section Streamlit dashboard                             | New (guided implementation)          |
-| 7   | Documentation & Presentation | README, architecture diagram, data-flow diagram, oral rehearsal | New                                  |
------------------------------------------------------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------------------------------------------------------
+| Phase                          | Notebook / File                      | Status        | Deliverable                                             |
+|--------------------------------|--------------------------------------|---------------|---------------------------------------------------------|
+| Setup (Ollama + llama3.1:8b)   | CEO Agent.ipynb (connection test)    | DONE          | local LLM installed + ollama.chat tested                |
+| Task 1: Data Collection        | Data Collection.ipynb                | DONE          | DDGS collector -> dedup -> lufthansa_data.json (~200)   |
+| Task 2: Knowledge Repository   | Knowledge Repository.ipynb           | DONE          | clean + embed + ChromaDB store/index + semantic search  |
+| Task 3: Processing             | (folded into Knowledge Repository)   | DONE          | clean + embed happen in Task 2                          |
+| Retrieval Layer: Hybrid Search | Knowledge Repository.ipynb           | DONE          | BM25 + dense, normalize + combine, top-k; tested        |
+| Task 4: Intelligence Engine    | Strategic Intelligence Engine.ipynb  | DONE          | zero-shot category + 3-class sentiment -> labeled JSON  |
+| Cleaning pass (before dashboard)| Knowledge Repository.ipynb          | TODO          | text-dedup + extra safe cleaning -> rebuild Chroma/BM25 |
+| Task 5 & 6: CEO Agent + Recs   | CEO Agent.ipynb                      | NEXT          | RAG with Ollama -> structured evidence-based recs       |
+| Dashboard (7 sections)         | app.py (Streamlit)                   | TODO          | Company/Market/Opportunity/Risk/Sentiment/Recs/Briefing |
+| Dashboard bonus: Version 2     | app.py                               | TODO (bonus)  | semantic vs hybrid comparison panel                     |
+| Documentation                  | README.md                            | DRAFTED       | architecture + data-flow diagrams, tech stack, decisions|
+| Oral rehearsal                 | (57 saved questions)                 | TODO          | practice concept Q&A + live-coding extend               |
+---------------------------------------------------------------------------------------------------------------------------------------------------
+
+DEADLINE: 22.06.2026 23:59  
 
 
 ----------------------------------------------------------------------------------------------------------------------------------------
