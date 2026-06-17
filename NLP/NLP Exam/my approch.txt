@@ -1,12 +1,12 @@
-i am taking Lufthansa as my company 
-data collection : i dont know how to collect live data but i remember i have studied in nlp
+i am taking Lufthansa as my company
+data collection : DDGs 
 
-• What are the major opportunities for the company? 
-• What are the biggest risks? 
-• What are competitors doing? 
-• Which technologies or trends should management monitor? 
-• What strategic actions should be prioritized? 
-• What evidence supports these recommendations? 
+• What are the major opportunities for the company?
+• What are the biggest risks?
+• What are competitors doing?
+• Which technologies or trends should management monitor?
+• What strategic actions should be prioritized?
+• What evidence supports these recommendations?
 
 -----------------------------------------------------------------------------------------------------------------------------------------------
 | Day |             Phase            |                          Deliverable                            |        Reuses Your Notebook          |
@@ -23,17 +23,79 @@ data collection : i dont know how to collect live data but i remember i have stu
 -----------------------------------------------------------------------------------------------------------------------------------------------
 
 
+
+
+SETUP (done)
+- Installed Ollama, pulled llama3.1:8b (the open-source LLM, no paid API).
+- Moved the model to D drive (D:\ollama_models) using OLLAMA_MODELS env variable so it doesnt fill C drive.
+- This LLM will be used in Task 5 (the reasoning engine).
+
+
 15/06/2026
 
-task 1
+task 1 - Live Data Collection  (DONE)
+- The system automatically collects information from at least three public sources.
+- I used DDGS (DuckDuckGo search) as the tool.
+- 4 content origins (tagged with "source"):
+    news       -> general Lufthansa news
+    reddit     -> Lufthansa site:reddit.com (community / public opinion)
+    competitor -> rival airlines (Air France-KLM, IAG, Ryanair, easyJet, Emirates, Turkish)
+    company    -> Lufthansa site:lufthansagroup.com (official / primary source)
+- 3 independent origins = news + reddit + company (competitor = extra Market content).
+- Ran many query angles per origin to reach volume.
+- Removed duplicates (dedup by URL using a dict keyed by url).
+- Stored everything in a JSON file: lufthansa_data.json  (~200 docs).
+- NOTE: DDGS gives short snippets (title + preview + url), not full articles. The "..." = truncated snippet. URL is kept as evidence for Task 6.
+- Did NOT use Wikipedia (its library kept failing with a JSON error).
 
-Live Data Collection 
--The system automatically collect information from at least three public sources.
-    I used DDGs and news,reddit, competitor, company website for the source of data
-    removed duplicate
-    stored in JSON file(lufthansa_data.json)
+16/06/2026
 
-task 2
-- Knowledge Repository
-    I am using CromaDB to collect the information to store and index it
+task 2 - Knowledge Repository  (DONE)   [notebook: Knowledge Repository.ipynb]
+- Loaded lufthansa_data.json.
+- CLEANING (light, on purpose):
+    normalize whitespace (re.sub) + strip + drop docs under 30 chars.
+    Did NOT do stopword removal / stemming / lowercasing -> transformer embeddings need natural text.
+- No chunking -> docs are short snippets, already one unit each (chunking is only for long docs/PDFs).
+- Stored in ChromaDB using PersistentClient(path="chroma_db") so it survives across notebooks/dashboard.
+- collection.add(documents, metadatas, ids) -> Chroma AUTO-EMBEDS with all-MiniLM-L6-v2 (384 numbers per doc).
+- metadata stored = source + url (the evidence).
+- Tested semantic search: collection.query(query_texts=[...]) -> returns docs by MEANING, not keywords.
+- This is the RETRIEVAL part of my RAG system.
 
+Extra (understanding / visualization):
+- An embedding = a vector of numbers that captures meaning (similar meaning -> nearby vectors).
+- Matching = nearest-neighbor: distance (L2 / cosine) between query vector and doc vectors (Chroma uses HNSW).
+- Tried PCA & t-SNE 2D scatter plots -> learned 2D CANNOT verify retrieval (it loses ~80% of info).
+- The honest visualization is a DISTANCE BAR CHART (the real 384-D ranking).
+
+17/03/2026
+
+task 3 (Processing) is folded into task 2 (clean + embed happen there).
+
+RETRIEVAL LAYER - Hybrid Search  (DONE)
+- WHY: BM25 (keyword) catches exact rare terms (e.g. "A350"); dense (semantic) catches meaning/synonyms.
+  Each is blind where the other is strong -> combine them = better retrieval.
+- Built BM25 index over the 200 docs (BM25Okapi, texts lowercased + split = tokenization).
+- Step 1: bm25_scores  = bm25.get_scores(query tokens)        -> keyword score per doc
+- Step 2: dense_scores = cosine_similarity(query_emb, doc_emb) -> semantic score per doc
+- Step 3a: normalize both to 0-1 (min-max) because they are on different scales.
+- Step 3b: combined = alpha*dense_norm + (1-alpha)*bm25_norm   (alpha = balance knob, 0.5 = equal)
+- Step 4: rank by combined score -> np.argsort(combined)[::-1][:k] -> top-k docs.
+- TESTED on "Lufthansa A350 fleet order": top result = exact "A350 (On order)" doc (score 1.000). Good.
+- Hybrid vs pure semantic were NEARLY IDENTICAL here (only #2/#3 swapped).
+  LESSON: hybrid is a SAFETY NET -> it helps mainly when semantic MISSES an exact rare term;
+  on easy queries semantic already works so hybrid changes little (and does no harm).
+- TODO (small): wrap Steps 1-4 into one reusable function hybrid_search(query, k, alpha) for the dashboard.
+
+
+WHOLE SYSTEM = a RAG pipeline:
+  collect (Task1) -> store/index (Task2) -> retrieve (semantic + hybrid) -> generate with Ollama (Task5) -> dashboard
+  RAG = Retrieval + Augmented(prompt) + Generation. BM25 is just an algorithm inside the Retrieval stage.
+
+
+=================== NEXT STEPS ===================
+- (small) wrap hybrid search Steps 1-4 into one hybrid_search() function for reuse in the dashboard.
+- Task 4: classify each doc into Opportunity / Risk / Trend (zero-shot bart-large-mnli) + sentiment (distilbert sst-2). Reuses Agents.ipynb.
+- Task 5 & 6: RAG with Ollama llama3.1:8b -> reason over retrieved evidence -> structured recommendations (recommendation + evidence + impact + risk + priority). Reuses RAG.ipynb (upgraded).
+- Task 7: Streamlit dashboard (7 sections) + bonus: semantic vs hybrid comparison panel.
+- README (architecture + data-flow diagrams) + oral rehearsal.
