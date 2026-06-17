@@ -28,6 +28,9 @@ data collection : DDGs
 SETUP (done)
 - Installed Ollama, pulled llama3.1:8b (the open-source LLM).
 - This LLM will be used in Task 5 (the reasoning engine).
+- Python `ollama` package installed; ollama.chat(model="llama3.1:8b", messages=[...]) TESTED -> works.
+  (chat messages use roles: system = persona/rules, user = my prompt, assistant = model's past replies.)
+  [notebook: CEO Agent.ipynb] -> Task 5 connection is ready.
 
 ----------------------------------------------------------------------------------------------------------------------------------------
 
