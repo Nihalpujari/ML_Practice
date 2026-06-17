@@ -8,24 +8,25 @@ data collection : DDGs
 • What strategic actions should be prioritized?
 • What evidence supports these recommendations?
 
----------------------------------------------------------------------------------------------------------------------------------------------------
-| Phase                          | Notebook / File                      | Status        | Deliverable                                             |
-|--------------------------------|--------------------------------------|---------------|---------------------------------------------------------|
-| Setup (Ollama + llama3.1:8b)   | CEO Agent.ipynb (connection test)    | DONE          | local LLM installed + ollama.chat tested                |
-| Task 1: Data Collection        | Data Collection.ipynb                | DONE          | DDGS collector -> dedup -> lufthansa_data.json (~200)   |
-| Task 2: Knowledge Repository   | Knowledge Repository.ipynb           | DONE          | clean + embed + ChromaDB store/index + semantic search  |
-| Task 3: Processing             | (folded into Knowledge Repository)   | DONE          | clean + embed happen in Task 2                          |
-| Retrieval Layer: Hybrid Search | Knowledge Repository.ipynb           | DONE          | BM25 + dense, normalize + combine, top-k; tested        |
-| Task 4: Intelligence Engine    | Strategic Intelligence Engine.ipynb  | DONE          | zero-shot category + 3-class sentiment -> labeled JSON  |
-| Cleaning pass (before dashboard)| Knowledge Repository.ipynb          | TODO          | text-dedup + extra safe cleaning -> rebuild Chroma/BM25 |
-| Task 5 & 6: CEO Agent + Recs   | CEO Agent.ipynb                      | NEXT          | RAG with Ollama -> structured evidence-based recs       |
-| Dashboard (7 sections)         | app.py (Streamlit)                   | TODO          | Company/Market/Opportunity/Risk/Sentiment/Recs/Briefing |
-| Dashboard bonus: Version 2     | app.py                               | TODO (bonus)  | semantic vs hybrid comparison panel                     |
-| Documentation                  | README.md                            | DRAFTED       | architecture + data-flow diagrams, tech stack, decisions|
-| Oral rehearsal                 | (57 saved questions)                 | TODO          | practice concept Q&A + live-coding extend               |
----------------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------------------
+| Phase                           | Notebook / File                      | Status        | Done       | Deliverable                                              |
+|---------------------------------|--------------------------------------|---------------|------------|----------------------------------------------------------|
+| Setup (Ollama + llama3.1:8b)    | CEO Agent.ipynb (connection test)    | DONE          | 15/06/2026 | local LLM installed + ollama.chat tested                 |
+| Task 1: Data Collection         | Data Collection.ipynb                | DONE          | 15/06/2026 | DDGS collector -> dedup -> lufthansa_data.json (~200)    |
+| Task 2: Knowledge Repository    | Knowledge Repository.ipynb           | DONE          | 16/06/2026 | clean + embed + ChromaDB store/index + semantic search   |
+| Task 3: Processing              | (folded into Knowledge Repository)   | DONE          | 16/06/2026 | clean + embed happen in Task 2                           |
+| Retrieval Layer: Hybrid Search  | Knowledge Repository.ipynb           | DONE          | 17/06/2026 | BM25 + dense, normalize + combine, top-k; tested         |
+| Task 4: Intelligence Engine     | Strategic Intelligence Engine.ipynb  | DONE          | 17/06/2026 | zero-shot category + 3-class sentiment -> labeled JSON   |
+| Documentation (draft)           | README.md                            | DRAFTED       | 17/06/2026 | architecture + data-flow diagrams, tech stack, decisions |
+| Cleaning pass (before dashboard)| Knowledge Repository.ipynb           | TODO          |    --      | text-dedup + extra safe cleaning -> rebuild Chroma/BM25  |
+| Task 5 & 6: CEO Agent + Recs    | CEO Agent.ipynb                      | NEXT          |    --      | RAG with Ollama -> structured evidence-based recs        |
+| Dashboard (7 sections)          | app.py (Streamlit)                   | TODO          |    --      | Company/Market/Opportunity/Risk/Sentiment/Recs/Briefing  |
+| Dashboard bonus: Version 2      | app.py                               | TODO (bonus)  |    --      | semantic vs hybrid comparison panel                      |
+| Oral rehearsal                  | (57 saved questions)                 | TODO          |    --      | practice concept Q&A + live-coding extend                |
+------------------------------------------------------------------------------------------------------------------------------------------------------------------
+STATUS KEY: DONE = finished | NEXT = doing now | TODO = pending | DRAFTED = written, update as I finish
 
-DEADLINE: 22.06.2026 23:59  
+DEADLINE: 22.06.2026 23:59
 
 
 ----------------------------------------------------------------------------------------------------------------------------------------
