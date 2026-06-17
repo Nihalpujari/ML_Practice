@@ -15,7 +15,7 @@ data collection : DDGs
 | 1   | Task 1: Data Collection      | Collector → save raw documents to JSON                          | Agents.ipynb (DDGS/Wiki)             |
 | 2   | Task 3: Processing           | Clean, deduplicate, chunk, and embed documents                  | Dense_Retrival.ipynb, FAISS notebook |
 | 2   | Task 2: Storage              | Load into ChromaDB and build BM25 index                         | VectorDB Assignment 2                |
-| 3   | Retrieval Layer              | Implement and test hybrid search function                       | BM25 + Dense_Retrival                |
+| 2   | Retrieval Layer              | Implement and test hybrid search function                       | BM25 + Dense_Retrival                |
 | 4   | Task 4: Analytics Engine     | Classification and sentiment analysis over all documents        | Agents.ipynb                         |
 | 4-5 | Task 5 & 6: CEO Agent        |  RAG pipeline + structured recommendations                      | RAG.ipynb (upgraded)                 |
 | 6   | Dashboard                    | Build 7-section Streamlit dashboard                             | New (guided implementation)          |
@@ -88,6 +88,27 @@ RETRIEVAL LAYER - Hybrid Search  (DONE)
 - TODO (small): wrap Steps 1-4 into one reusable function hybrid_search(query, k, alpha) for the dashboard.
 
 
+task 4 - Strategic Intelligence Engine  (IN PROGRESS)   [notebook: Strategic Intelligence Engine.ipynb]
+- GOAL: add INTELLIGENCE to each doc = two labels:
+    category  = opportunity / risk / trend   (zero-shot, facebook/bart-large-mnli)
+    sentiment = positive / negative          (distilbert-base-uncased-finetuned-sst-2-english)
+- WHY zero-shot: no labeled training data; define labels at runtime; model judges fit (NLI entailment).
+  HOW it scores: each label becomes a hypothesis "this text is about {label}"; model scores how much the
+  text (premise) ENTAILS it; scores normalized; highest wins. (bart-large-mnli = trained on NLI.)
+- Both tools come from Agents.ipynb: zero-shot = Support Agent (intent), sentiment = News Analyst Agent (Ex.2).
+- Framing = an "Analyst Agent" (perceive doc -> reason classify+sentiment -> act tag doc). Feeds the CEO Agent (Task5).
+- Ollama is NOT used here -> small fast models for bulk labeling; Ollama (the reasoning LLM) is for Task 5.
+- DONE so far: classifier tested on 1 sentence (risk 0.93) + 5 real docs. Confidence on generic docs is lowish (0.4-0.6)
+  because the 3 labels overlap and snippets are short -> that's OK, category is a ROUGH sort; Task 5 LLM does the real reasoning.
+- SUBTYPES (opportunity/risk/trend each have examples in the brief): those are EXAMPLES not required sub-labels.
+  Keeping 3 main categories (robust, higher confidence). Subtypes = OPTIONAL; can demo live with a 2-level classifier
+  (dict category->subtypes, 2nd zero-shot on subtypes[category]). Drawbacks of doing it now: lower accuracy (errors cascade),
+  ~2x runtime, more code, not required -> keep as on-demand demo only.
+- LEFT TO DO: add sentiment to the loop (text[:512] for the 512 token limit) -> wrap both into analyst_agent(doc)
+  -> run on all 200 -> save category + sentiment + sentiment_score to a new JSON for the dashboard.
+- Data note: models are English; my corpus is English (English DDGS queries), so safe. Non-English would be unreliable.
+
+
 WHOLE SYSTEM = a RAG pipeline:
   collect (Task1) -> store/index (Task2) -> retrieve (semantic + hybrid) -> generate with Ollama (Task5) -> dashboard
   RAG = Retrieval + Augmented(prompt) + Generation. BM25 is just an algorithm inside the Retrieval stage.
@@ -95,7 +116,7 @@ WHOLE SYSTEM = a RAG pipeline:
 
 =================== NEXT STEPS ===================
 - (small) wrap hybrid search Steps 1-4 into one hybrid_search() function for reuse in the dashboard.
-- Task 4: classify each doc into Opportunity / Risk / Trend (zero-shot bart-large-mnli) + sentiment (distilbert sst-2). Reuses Agents.ipynb.
+- Task 4 (continue): add sentiment to loop -> analyst_agent(doc) -> run on all 200 -> save labeled JSON.
 - Task 5 & 6: RAG with Ollama llama3.1:8b -> reason over retrieved evidence -> structured recommendations (recommendation + evidence + impact + risk + priority). Reuses RAG.ipynb (upgraded).
 - Task 7: Streamlit dashboard (7 sections) + bonus: semantic vs hybrid comparison panel.
 - README (architecture + data-flow diagrams) + oral rehearsal.
