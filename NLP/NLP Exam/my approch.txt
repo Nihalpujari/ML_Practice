@@ -8,28 +8,28 @@ data collection : DDGs
 • What strategic actions should be prioritized?
 • What evidence supports these recommendations?
 
-------------------------------------------------------------------------------------------------------------------------------------------------------------------
-| Phase                           | Notebook / File                      | Status        | Done       | Deliverable                                              |
-|---------------------------------|--------------------------------------|---------------|------------|----------------------------------------------------------|
-| Setup (Ollama + llama3.1:8b)    | CEO Agent.ipynb (connection test)    | DONE          | 15/06/2026 | local LLM installed + ollama.chat tested                 |
-| Task 1: Data Collection         | Data Collection.ipynb                | DONE          | 15/06/2026 | DDGS collector -> dedup -> lufthansa_data.json (~200)    |
-| Task 2: Knowledge Repository    | Knowledge Repository.ipynb           | DONE          | 16/06/2026 | clean + embed + ChromaDB store/index + semantic search   |
-| Task 3: Processing              | (folded into Knowledge Repository)   | DONE          | 16/06/2026 | clean + embed happen in Task 2                           |
-| Retrieval Layer: Hybrid Search  | Knowledge Repository.ipynb           | DONE          | 17/06/2026 | BM25 + dense, normalize + combine, top-k; tested         |
-| Task 4: Intelligence Engine     | Strategic Intelligence Engine.ipynb  | DONE          | 17/06/2026 | zero-shot category + 3-class sentiment -> labeled JSON   |
-| Documentation (draft)           | README.md                            | DRAFTED       | 17/06/2026 | architecture + data-flow diagrams, tech stack, decisions |
-| Cleaning pass (before dashboard)| Knowledge Repository.ipynb           | TODO          |    --      | text-dedup + extra safe cleaning -> rebuild Chroma/BM25  |
-| Task 5 & 6: CEO Agent + Recs    | CEO Agent.ipynb                      | NEXT          |    --      | RAG with Ollama -> structured evidence-based recs        |
-| Dashboard (7 sections)          | app.py (Streamlit)                   | TODO          |    --      | Company/Market/Opportunity/Risk/Sentiment/Recs/Briefing  |
-| Dashboard bonus: Version 2      | app.py                               | TODO (bonus)  |    --      | semantic vs hybrid comparison panel                      |
-| Oral rehearsal                  | (57 saved questions)                 | TODO          |    --      | practice concept Q&A + live-coding extend                |
-------------------------------------------------------------------------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+| Phase                           | Notebook / File                      | Status        | Done       | Tools / Libraries used                                                                               | Deliverable                                              |
+|---------------------------------|--------------------------------------|---------------|------------|------------------------------------------------------------------------------------------------------|----------------------------------------------------------|
+| Setup (Ollama + llama3.1:8b)    | CEO Agent.ipynb (connection test)    | DONE          | 15/06/2026 | Ollama, llama3.1:8b, ollama (python pkg)                                                             | local LLM installed + ollama.chat tested                 |
+| Task 1: Data Collection         | Data Collection.ipynb                | DONE          | 15/06/2026 | ddgs (DuckDuckGo search), json, dict-dedup by url                                                    | DDGS collector -> dedup -> lufthansa_data.json (~200)    |
+| Task 2: Knowledge Repository    | Knowledge Repository.ipynb           | DONE          | 16/06/2026 | sentence-transformers (all-MiniLM-L6-v2), chromadb, re, json                                         | clean + embed + ChromaDB store/index + semantic search   |
+| Task 3: Processing              | (folded into Knowledge Repository)   | DONE          | 16/06/2026 | re (clean), sentence-transformers (embed)                                                            | clean + embed happen in Task 2                           |
+| Retrieval Layer: Hybrid Search  | Knowledge Repository.ipynb           | DONE          | 17/06/2026 | rank_bm25 (BM25Okapi), sklearn (cosine_similarity), numpy                                            | BM25 + dense, normalize + combine, top-k; tested         |
+| Task 4: Intelligence Engine     | Strategic Intelligence Engine.ipynb  | DONE          | 17/06/2026 | transformers pipeline: bart-large-mnli (zero-shot) + cardiffnlp roberta (3-class sentiment), Counter | zero-shot category + 3-class sentiment -> labeled JSON   |
+| Documentation (draft)           | README.md                            | DRAFTED       | 17/06/2026 | Markdown, Mermaid diagrams                                                                           | architecture + data-flow diagrams, tech stack, decisions |
+| Cleaning pass (before dashboard)| Knowledge Repository.ipynb           | TODO          |    --      | re, dict text-dedup, chromadb rebuild                                                                | text-dedup + extra safe cleaning -> rebuild Chroma/BM25  |
+| Task 5 & 6: CEO Agent + Recs    | CEO Agent.ipynb                      | NEXT          |    --      | ollama (llama3.1:8b), RAG (hybrid retrieve + prompt)                                                 | RAG with Ollama -> structured evidence-based recs        |
+| Dashboard (7 sections)          | app.py (Streamlit)                   | TODO          |    --      | streamlit, matplotlib                                                                                | Company/Market/Opportunity/Risk/Sentiment/Recs/Briefing  |
+| Dashboard bonus: Version 2      | app.py                               | TODO (bonus)  |    --      | streamlit (hybrid_search + semantic compare)                                                         | semantic vs hybrid comparison panel                      |
+| Oral rehearsal                  | (57 saved questions)                 | TODO          |    --      | exam-questions notes                                                                                 | practice concept Q&A + live-coding extend                |
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 STATUS KEY: DONE = finished | NEXT = doing now | TODO = pending | DRAFTED = written, update as I finish
 
 DEADLINE: 22.06.2026 23:59
 
 
-----------------------------------------------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 SETUP (done)
 - Installed Ollama, pulled llama3.1:8b (the open-source LLM).
@@ -38,7 +38,7 @@ SETUP (done)
   (chat messages use roles: system = persona/rules, user = my prompt, assistant = model's past replies.)
   [notebook: CEO Agent.ipynb] -> Task 5 connection is ready.
 
-----------------------------------------------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 15/06/2026
 
@@ -57,7 +57,7 @@ task 1 - Live Data Collection  (DONE)
 - NOTE: DDGS gives short snippets (title + preview + url), not full articles. The "..." = truncated snippet. URL is kept as evidence for Task 6.
 - Did NOT use Wikipedia (its library kept failing with a JSON error).
 
-----------------------------------------------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 16/06/2026
 
@@ -79,7 +79,7 @@ Extra (understanding / visualization):
 - Tried PCA & t-SNE 2D scatter plots -> learned 2D CANNOT verify retrieval (it loses ~80% of info).
 - The honest visualization is a DISTANCE BAR CHART (the real 384-D ranking).
 
-----------------------------------------------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 17/03/2026
 
@@ -100,7 +100,7 @@ RETRIEVAL LAYER - Hybrid Search  (DONE)
   on easy queries semantic already works so hybrid changes little (and does no harm).
 - TODO (small): wrap Steps 1-4 into one reusable function hybrid_search(query, k, alpha) for the dashboard.
 
--------------------------------------------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 17/03/2026
 
@@ -133,13 +133,13 @@ task 4 - Strategic Intelligence Engine     [notebook: Strategic Intelligence Eng
 - Data note: models are English; my corpus is English (English DDGS queries), so safe. Non-English would be unreliable.
 - text[:512] used for sentiment (BERT/RoBERTa 512 token limit).
 
-----------------------------------------------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 WHOLE SYSTEM = a RAG pipeline:
   collect (Task1) -> store/index (Task2) -> retrieve (semantic + hybrid) -> generate with Ollama (Task5) -> dashboard
   RAG = Retrieval + Augmented(prompt) + Generation. BM25 is just an algorithm inside the Retrieval stage.
 
-----------------------------------------------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 =================== NEXT STEPS ===================
 - (small) wrap hybrid search Steps 1-4 into one hybrid_search() function for reuse in the dashboard.
@@ -148,6 +148,6 @@ WHOLE SYSTEM = a RAG pipeline:
 - Task 7: Streamlit dashboard (7 sections) + bonus: semantic vs hybrid comparison panel.
 - README (architecture + data-flow diagrams) + oral rehearsal.
 
--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
