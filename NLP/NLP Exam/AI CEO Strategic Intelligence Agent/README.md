@@ -87,26 +87,32 @@ flowchart TD
     end
 
     SOURCES -->|DDGS web search| COLLECT[Task 1: Collector<br/>dedup by URL]
-    COLLECT --> JSON[(lufthansa_data.json)]
+    COLLECT --> JSON[(lufthansa_data.json<br/>raw docs)]
 
-    JSON --> PROC[Task 3: Processing<br/>clean + embed]
+    JSON --> PROC[Task 2/3: clean + embed<br/>all-MiniLM-L6-v2]
     PROC --> CHROMA[(ChromaDB<br/>vectors + text + metadata)]
     PROC --> BM25[(BM25 keyword index)]
+    PROC -. doc_emb .-> COS[cosine_similarity<br/>on embeddings]
 
-    CHROMA --> RET[Retrieval Layer<br/>Semantic + Hybrid]
-    BM25 --> RET
+    JSON --> INTEL[Task 4: Intelligence Engine<br/>zero-shot category + 3-class sentiment]
+    INTEL --> LABELED[(lufthansa_labeled.json)]
 
-    JSON --> INTEL[Task 4: Intelligence Engine<br/>zero-shot category + sentiment]
-    INTEL --> LABELED[(labeled docs)]
+    CHROMA -->|collection.query| SEM[Semantic retrieval]
+    BM25 --> HYB[Hybrid retrieval<br/>BM25 + cosine, normalize + combine]
+    COS --> HYB
 
-    RET --> AGENT[Task 5: AI CEO Agent<br/>Ollama llama3.1:8b]
-    LABELED --> AGENT
-    AGENT --> RECS[Task 6: Evidence-Based<br/>Recommendations]
+    SEM --> AGENT[Task 5: AI CEO Agent<br/>Ollama llama3.1:8b]
+    HYB -. built &amp; tested, not yet wired .-> AGENT
+    AGENT --> RECS[(recommendations.json<br/>Task 6: rec + justification + evidence + impact + risk + priority)]
+    RECS --> BRIEF[Section 7: CEO Briefing]
+    BRIEF --> CB[(ceo_briefing.json)]
 
-    RECS --> DASH[Executive Dashboard<br/>Streamlit, 7 sections]
-    LABELED --> DASH
-    CHROMA --> DASH
+    LABELED --> DASH[Executive Dashboard<br/>Streamlit, 7 sections]
+    RECS --> DASH
+    CB --> DASH
 ```
+
+> **Accuracy notes (matches the code):** Task 4 reads the **raw** `lufthansa_data.json` (not the cleaned/embedded version). Retrieval has **two paths** — *semantic* via `collection.query` (used by the agent) and *hybrid* = BM25 + cosine-on-embeddings (built & tested standalone, not yet wired into the agent). The agent currently uses **semantic** retrieval.
 
 ---
 
@@ -114,17 +120,20 @@ flowchart TD
 
 ```mermaid
 flowchart LR
-    Q[CEO question] --> EMB[embed query]
-    EMB --> RETR[retrieve evidence<br/>hybrid: BM25 + dense]
-    RETR --> CTX[build context<br/>from retrieved docs]
-    CTX --> PROMPT[augment prompt<br/>context + question]
-    PROMPT --> LLM[Ollama LLM<br/>reason]
-    LLM --> OUT[structured recommendation<br/>+ evidence + impact + risk]
+    Q[CEO question] --> SEM[collection.query<br/>semantic retrieval]
+    SEM --> CTX[build context<br/>docs tagged with source]
+    CTX --> PROMPT[prompt: system + user<br/>format=json]
+    PROMPT --> LLM[Ollama llama3.1:8b<br/>reason]
+    LLM --> OUT[structured recommendation<br/>rec + justification + evidence + impact + risk + priority]
+    OUT --> BRIEF[CEO briefing synthesis]
     OUT --> UI[dashboard]
+    BRIEF --> UI
 ```
 
 **Plain-language flow (the RAG pipeline):**
-`collect → clean → embed → store/index → retrieve → augment prompt → generate → display`
+`collect → clean → embed → store/index → retrieve (semantic) → augment prompt → generate (JSON) → briefing → display`
+
+> The **hybrid** path (BM25 + cosine) is implemented separately; swapping it into the agent (replacing `collection.query` with `hybrid_search`) is a one-step change.
 
 ---
 
