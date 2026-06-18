@@ -12,7 +12,7 @@ data collection : DDGs
 | Phase                           | Notebook / File                      | Status        | Done       | Tools / Libraries used                                                                               | Deliverable                                              |
 |---------------------------------|--------------------------------------|---------------|------------|------------------------------------------------------------------------------------------------------|----------------------------------------------------------|
 | Setup (Ollama + llama3.1:8b)    | CEO Agent.ipynb (connection test)    | DONE          | 15/06/2026 | Ollama, llama3.1:8b, ollama (python pkg)                                                             | local LLM installed + ollama.chat tested                 |
-| Task 1: Data Collection         | Data Collection.ipynb                | DONE          | 15/06/2026 | ddgs (DuckDuckGo search), json, dict-dedup by url                                                    | DDGS collector -> dedup -> lufthansa_data.json (~200)    |
+| Task 1: Data Collection         | Data Collection.ipynb                | DONE          | 15/06/2026 | ddgs (DuckDuckGo search), json, dict-dedup by url, re (cleaning)                                     | DDGS -> URL+text dedup + clean -> lufthansa_data.json (195) |
 | Task 2: Knowledge Repository    | Knowledge Repository.ipynb           | DONE          | 16/06/2026 | sentence-transformers (all-MiniLM-L6-v2), chromadb, re, json                                         | clean + embed + ChromaDB store/index + semantic search   |
 | Task 3: Processing              | (folded into Knowledge Repository)   | DONE          | 16/06/2026 | re (clean), sentence-transformers (embed)                                                            | clean + embed happen in Task 2                           |
 | Retrieval Layer: Hybrid Search  | Knowledge Repository.ipynb           | DONE          | 17/06/2026 | rank_bm25 (BM25Okapi), sklearn (cosine_similarity), numpy                                            | BM25 + dense, normalize + combine, top-k; tested         |
@@ -20,8 +20,8 @@ data collection : DDGs
 | Documentation (draft)           | README.md                            | DRAFTED       | 17/06/2026 | Markdown, Mermaid diagrams                                                                           | architecture + data-flow diagrams, tech stack, decisions |
 | Task 5 & 6: CEO Agent + Recs    | CEO Agent.ipynb                      | DONE          | 18/06/2026 | ollama (llama3.1:8b), RAG (Chroma retrieve + prompt + format=json)                                   | structured recs -> recommendations.json (5)              |
 | Section 7: CEO Briefing         | CEO Agent.ipynb                      | DONE          | 18/06/2026 | ollama (llama3.1:8b), format=json                                                                    | exec summary -> ceo_briefing.json (3 questions)          |
-| Cleaning pass (before dashboard)| Knowledge Repository.ipynb           | NEXT          |    --      | re, dict text-dedup, chromadb rebuild                                                                | text-dedup + extra safe cleaning -> rebuild Chroma/BM25  |
-| Dashboard (7 sections)          | app.py (Streamlit)                   | TODO          |    --      | streamlit, matplotlib                                                                                | Company/Market/Opportunity/Risk/Sentiment/Recs/Briefing  |
+| Cleaning pass (clean at source) | Data Collection.ipynb (+ rebuilds)   | DONE          | 18/06/2026 | re, dict text-dedup, low-info filter, chromadb rebuild                                               | clean -> 195 docs; rebuilt Chroma/BM25/labels/recs       |
+| Dashboard (7 sections)          | app.py (Streamlit)                   | NEXT          |    --      | streamlit, matplotlib                                                                                | Company/Market/Opportunity/Risk/Sentiment/Recs/Briefing  |
 | Dashboard bonus: Version 2      | app.py                               | TODO (bonus)  |    --      | streamlit (hybrid_search + semantic compare)                                                         | semantic vs hybrid comparison panel                      |
 | Oral rehearsal                  | (57 saved questions)                 | TODO          |    --      | exam-questions notes                                                                                 | practice concept Q&A + live-coding extend                |
 -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -165,6 +165,22 @@ Section 7 - CEO Briefing  (DONE)   [notebook: CEO Agent.ipynb]
 
 -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
+18/06/2026
+
+CLEANING PASS  (DONE)  -> moved ALL cleaning into Data Collection.ipynb (clean at the SOURCE)
+- WHY here: clean once at collection -> lufthansa_data.json is already clean -> every downstream stage uses clean data
+  (also fixes the old inconsistency where Task4 read raw text but Chroma held cleaned text).
+- Cleaning now applied (after URL-dedup, before save):
+    whitespace normalize + collapse "...." + drop <30 chars + drop low-info/navigation pages (<10 unique words) + TEXT-dedup.
+- Result: 202 -> 195 clean docs (removed 7: dupes + menu/listing pages).
+- REBUILT everything on the 195 so all artifacts align:
+    Chroma (delete-if-exists then re-add), BM25, doc_emb, relabeled lufthansa_labeled.json, regenerated recommendations.json + ceo_briefing.json.
+- Chroma delete made idempotent: if any(c.name=="lufthansa" for c in client.list_collections()): client.delete_collection(...)
+- Knowledge Repository's own cleaning cells are now redundant -> kept `cleaned_docs = documents` alias so downstream code still runs.
+- LESSON: URL-uniqueness != content-uniqueness (3 text dupes survived URL-dedup); dedup by text too. Clean NOISE not MEANING.
+
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 WHOLE SYSTEM = a RAG pipeline:
   collect (Task1) -> store/index (Task2) -> retrieve (semantic + hybrid) -> generate with Ollama (Task5) -> dashboard
   RAG = Retrieval + Augmented(prompt) + Generation. BM25 is just an algorithm inside the Retrieval stage.
@@ -172,17 +188,16 @@ WHOLE SYSTEM = a RAG pipeline:
 -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 =================== NEXT STEPS ===================
-- NEXT: cleaning pass = text-dedup (3 dupes) + extra safe cleaning -> rebuild Chroma/BM25 -> re-save labeled JSON.
-- Dashboard (Streamlit app.py, 7 sections): Company Overview / Market Intelligence / Opportunity Monitor /
+- NEXT: Dashboard (Streamlit app.py, 7 sections): Company Overview / Market Intelligence / Opportunity Monitor /
   Risk Monitor / Sentiment Analysis / Strategic Recommendations / CEO Briefing.
   Each section just LOADS a saved file (lufthansa_labeled.json, recommendations.json, ceo_briefing.json) -> fast.
 - Dashboard bonus: Version 2 = semantic vs hybrid comparison panel.
 - README polish (mark all done) + oral rehearsal (62 saved questions).
-- (small) wrap hybrid search into hybrid_search() function for the dashboard.
+- (optional) Option B: wire hybrid_search() into ceo_agent so the agent uses hybrid (not just semantic).
 
-DATA FILES (artifacts the dashboard reads):
-  lufthansa_data.json (raw, Task1) -> chroma_db/ (Task2) -> lufthansa_labeled.json (Task4) ->
-  recommendations.json (Task5/6) + ceo_briefing.json (Sec7)
+DATA FILES (artifacts the dashboard reads) — all now consistent at 195:
+  lufthansa_data.json (195, clean, Task1) -> chroma_db/ + BM25 (Task2) -> lufthansa_labeled.json (195, Task4) ->
+  recommendations.json (5, Task5/6) + ceo_briefing.json (Sec7)
 
 -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

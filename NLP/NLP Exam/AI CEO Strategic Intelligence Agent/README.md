@@ -43,7 +43,7 @@ evidence-based recommendations** — presented in an interactive dashboard.
 ## Features
 
 - **Automatic live data collection** from multiple independent public sources
-- **≥ 100 documents** collected, de-duplicated, and stored (~200 currently)
+- **≥ 100 documents** collected, cleaned, de-duplicated, and stored (**195** after cleaning)
 - **Vector knowledge base** with semantic search (ChromaDB)
 - **Hybrid retrieval** combining keyword (BM25) and semantic (embeddings) search
 - **Zero-shot classification** of each document into Opportunity / Risk / Trend
@@ -178,8 +178,9 @@ Maps to the brief's source categories: News, Community, Company (+ Market). Thre
 relying on a flaky component for a graded live demo is a risk. The official company site (via DDGS)
 is a more reliable *and* primary source.
 
-**4. De-duplication by URL.** The same article surfaces under multiple queries; a dict keyed by URL
-keeps one copy per article (same uniqueness property as a set, but it carries the full document).
+**4. De-duplication by URL *and* text.** The same article surfaces under multiple queries; a dict
+keyed by URL keeps one copy per article. But different URLs can carry identical text (URL-uniqueness
+≠ content-uniqueness), so a second dedup keyed by text removes those too.
 
 **5. ChromaDB over FAISS.** Chroma stores text + embedding + metadata *together* and persists to
 disk, so every pipeline stage and the dashboard can reuse the same indexed store. FAISS is a bare
@@ -190,10 +191,13 @@ convenience wins.
 dashboard process; in-memory storage lives in one process's RAM. Persisting to disk lets every
 stage open the same store without re-embedding.
 
-**7. Light cleaning only (no stopword removal / stemming / lowercasing).**
-Transformer embeddings are trained on natural language and rely on case, punctuation, and stopwords
-for meaning. Heavy cleaning helps BoW/TF-IDF, not embeddings. Only whitespace normalization and
-dropping near-empty docs are applied (kept as defensive code for future live data).
+**7. Light cleaning at the source (no stopword removal / stemming / lowercasing).**
+Cleaning runs in the collection stage so the saved data is already clean and every downstream stage
+uses it consistently. Applied: whitespace normalization, drop near-empty docs, drop low-information
+navigation/listing pages (few unique words), and text de-duplication. Deliberately *avoided*:
+lowercasing, stopword removal, stemming, number/punctuation removal — transformer embeddings are
+trained on natural language and rely on case, punctuation, numbers, and stopwords for meaning
+(heavy cleaning helps BoW/TF-IDF, not embeddings). Rule: remove *noise*, never *meaning*.
 
 **8. No chunking.** Documents are short search snippets — already single-topic units. Chunking only
 helps long documents (e.g. PDFs), where one vector would blur many topics.
@@ -216,7 +220,7 @@ listings) into positive/negative with misleadingly high confidence. Switched to
 text) so neutral documents are correctly labeled neutral — confirmed by the result distribution
 (neutral 118, positive 55, negative 27).
 
-**12. Small models for labeling, LLM for reasoning.** Classification/sentiment over ~200 docs needs
+**12. Small models for labeling, LLM for reasoning.** Classification/sentiment over ~195 docs needs
 speed, not reasoning — small specialized models are ideal. The 8B LLM is reserved for Task 5, where
 the system must read evidence, reason, and *write* justified recommendations — something classifiers
 cannot do.
