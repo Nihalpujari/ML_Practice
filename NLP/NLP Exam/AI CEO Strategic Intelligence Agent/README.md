@@ -34,8 +34,9 @@ evidence-based recommendations** — presented in an interactive dashboard.
 | Task 3 — Information Processing (clean + embed) | ✅ Done (folded into Task 2) |
 | Retrieval Layer — Semantic + Hybrid (BM25 + dense) | ✅ Done |
 | Task 4 — Strategic Intelligence Engine (classify + sentiment) | ✅ Done |
-| Task 5 & 6 — AI CEO Agent + Evidence-Based Recommendations | ⬜ Planned |
-| Executive Dashboard (Streamlit, 7 sections) | ⬜ Planned |
+| Task 5 & 6 — AI CEO Agent + Evidence-Based Recommendations | ✅ Done |
+| Section 7 — CEO Briefing (executive summary) | ✅ Done |
+| Executive Dashboard (Streamlit, 7 sections) | 🔶 Next |
 
 ---
 

@@ -18,8 +18,9 @@ data collection : DDGs
 | Retrieval Layer: Hybrid Search  | Knowledge Repository.ipynb           | DONE          | 17/06/2026 | rank_bm25 (BM25Okapi), sklearn (cosine_similarity), numpy                                            | BM25 + dense, normalize + combine, top-k; tested         |
 | Task 4: Intelligence Engine     | Strategic Intelligence Engine.ipynb  | DONE          | 17/06/2026 | transformers pipeline: bart-large-mnli (zero-shot) + cardiffnlp roberta (3-class sentiment), Counter | zero-shot category + 3-class sentiment -> labeled JSON   |
 | Documentation (draft)           | README.md                            | DRAFTED       | 17/06/2026 | Markdown, Mermaid diagrams                                                                           | architecture + data-flow diagrams, tech stack, decisions |
-| Cleaning pass (before dashboard)| Knowledge Repository.ipynb           | TODO          |    --      | re, dict text-dedup, chromadb rebuild                                                                | text-dedup + extra safe cleaning -> rebuild Chroma/BM25  |
-| Task 5 & 6: CEO Agent + Recs    | CEO Agent.ipynb                      | NEXT          |    --      | ollama (llama3.1:8b), RAG (hybrid retrieve + prompt)                                                 | RAG with Ollama -> structured evidence-based recs        |
+| Task 5 & 6: CEO Agent + Recs    | CEO Agent.ipynb                      | DONE          | 18/06/2026 | ollama (llama3.1:8b), RAG (Chroma retrieve + prompt + format=json)                                   | structured recs -> recommendations.json (5)              |
+| Section 7: CEO Briefing         | CEO Agent.ipynb                      | DONE          | 18/06/2026 | ollama (llama3.1:8b), format=json                                                                    | exec summary -> ceo_briefing.json (3 questions)          |
+| Cleaning pass (before dashboard)| Knowledge Repository.ipynb           | NEXT          |    --      | re, dict text-dedup, chromadb rebuild                                                                | text-dedup + extra safe cleaning -> rebuild Chroma/BM25  |
 | Dashboard (7 sections)          | app.py (Streamlit)                   | TODO          |    --      | streamlit, matplotlib                                                                                | Company/Market/Opportunity/Risk/Sentiment/Recs/Briefing  |
 | Dashboard bonus: Version 2      | app.py                               | TODO (bonus)  |    --      | streamlit (hybrid_search + semantic compare)                                                         | semantic vs hybrid comparison panel                      |
 | Oral rehearsal                  | (57 saved questions)                 | TODO          |    --      | exam-questions notes                                                                                 | practice concept Q&A + live-coding extend                |
@@ -135,6 +136,35 @@ task 4 - Strategic Intelligence Engine     [notebook: Strategic Intelligence Eng
 
 -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
+18/06/2026
+
+task 5 & 6 - AI CEO Agent + Evidence-Based Recommendations  (DONE)   [notebook: CEO Agent.ipynb]
+- This is the RAG put together (Retrieve -> Augment -> Generate). Ollama llama3.1:8b is the reasoning engine.
+- ceo_agent(question, k=5):
+    1. RETRIEVE: collection.query(query_texts=[question], n_results=k) -> top-k docs (semantic)
+    2. CONTEXT: join docs, each tagged "[source] text" so the LLM sees provenance
+    3. GENERATE: ollama.chat(model="llama3.1:8b", messages=[system, user], format="json")
+       - system prompt = CEO-advisor persona + "use ONLY the evidence" (anti-hallucination) + exact JSON keys
+       - format="json" forces valid JSON (but NOT the shape -> must spell out keys in the prompt)
+    4. PARSE: json.loads(...); attach question + source URLs (the clickable evidence)
+- JSON keys per recommendation: recommendation, justification (covers Task5 "justify"), supporting_evidence,
+  expected_impact, risk_level (High/Med/Low), priority (High/Med/Low). + question + sources(urls).
+- Maps to brief: Task6 (rec/evidence/impact/risk) + dashboard Sec6 (rec/priority/evidence/impact/risk) + Task5 "justify".
+- PRE-GENERATED 5 CEO questions -> recommendations.json  (slow: ~2.5 min/call on CPU; run ONCE, dashboard loads file).
+- Reddit IS real: ceo_agent sources included reddit.com URLs -> partially answers my "is reddit data real?" question.
+
+Section 7 - CEO Briefing  (DONE)   [notebook: CEO Agent.ipynb]
+- ceo_briefing(recommendations): one LLM call that SYNTHESIZES the recommendations into an exec summary.
+- JSON keys = the brief's 3 questions: what_happened / why_it_matters / what_to_do_next (plain strings).
+- NOTE: first run returned NESTED dicts -> had to add "each value MUST be a plain string" to the prompt.
+  LESSON: format="json" guarantees valid JSON, NOT the exact shape -> control shape via explicit prompt.
+- SAVED to ceo_briefing.json.
+- WHY pre-generate everything (recs + briefing) to JSON: 8B on CPU is slow; dashboard loads files = fast + reliable.
+  For the demo: run from saved artifacts (consistent) + run small live samples (1 ddgs query, 1 ceo_agent call) to prove it's real.
+  DON'T re-run only collection mid-demo -> new live data desyncs Chroma/labels/recs. All-fresh OR all-saved, never mixed.
+
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 WHOLE SYSTEM = a RAG pipeline:
   collect (Task1) -> store/index (Task2) -> retrieve (semantic + hybrid) -> generate with Ollama (Task5) -> dashboard
   RAG = Retrieval + Augmented(prompt) + Generation. BM25 is just an algorithm inside the Retrieval stage.
@@ -142,11 +172,17 @@ WHOLE SYSTEM = a RAG pipeline:
 -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 =================== NEXT STEPS ===================
-- (small) wrap hybrid search Steps 1-4 into one hybrid_search() function for reuse in the dashboard.
-- BEFORE DASHBOARD: cleaning pass = text-dedup (3 dupes) + extra safe cleaning -> rebuild Chroma/BM25 -> re-save labeled JSON.
-- Task 5 & 6: RAG with Ollama llama3.1:8b -> reason over retrieved evidence -> structured recommendations (recommendation + evidence + impact + risk + priority). Reuses RAG.ipynb (upgraded).
-- Task 7: Streamlit dashboard (7 sections) + bonus: semantic vs hybrid comparison panel.
-- README (architecture + data-flow diagrams) + oral rehearsal.
+- NEXT: cleaning pass = text-dedup (3 dupes) + extra safe cleaning -> rebuild Chroma/BM25 -> re-save labeled JSON.
+- Dashboard (Streamlit app.py, 7 sections): Company Overview / Market Intelligence / Opportunity Monitor /
+  Risk Monitor / Sentiment Analysis / Strategic Recommendations / CEO Briefing.
+  Each section just LOADS a saved file (lufthansa_labeled.json, recommendations.json, ceo_briefing.json) -> fast.
+- Dashboard bonus: Version 2 = semantic vs hybrid comparison panel.
+- README polish (mark all done) + oral rehearsal (62 saved questions).
+- (small) wrap hybrid search into hybrid_search() function for the dashboard.
+
+DATA FILES (artifacts the dashboard reads):
+  lufthansa_data.json (raw, Task1) -> chroma_db/ (Task2) -> lufthansa_labeled.json (Task4) ->
+  recommendations.json (Task5/6) + ceo_briefing.json (Sec7)
 
 -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
