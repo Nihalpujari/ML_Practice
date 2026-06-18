@@ -1,17 +1,5 @@
 {
-  "what_happened": {
-    "long-haul flights": "Demand for long-haul travel continues to grow, prompting a high-priority recommendation to increase our capacity",
-    "digital transformation": "Investments are needed in digital initiatives to enhance customer experience and operational efficiency",
-    "competitive landscape": "Competitors such as United Airlines, Qatar Airways, and Turkish Airlines are actively updating fleets and integrating ITA systems, necessitating close monitoring"
-  },
-  "why_it_matters": {
-    "demand growth": "Meeting growing demand for long-haul flights is crucial to maintaining market share",
-    "customer experience": "Digital transformation will drive customer satisfaction and loyalty",
-    "competitive parity": "Monitoring the competitive landscape ensures Lufthansa stays abreast of industry developments"
-  },
-  "what_to_do_next": {
-    "increase long-haul capacity": "Allocate resources to increase long-haul flights in response to growing demand",
-    "invest in digital transformation": "Execute high-priority investments in customer experience and operational efficiency initiatives",
-    "monitor competitive landscape": "Regularly analyze fleet renewal and ITA integration efforts of key competitors"
-  }
+  "what_happened": "We received strategic recommendations to increase long-haul flights, invest in digital transformation, monitor competitive landscape, and accelerate profitable expansion through partnerships.",
+  "why_it_matters": "These initiatives are crucial for meeting growing demand, improving customer experience, and staying competitive with main airlines such as United Airlines, Qatar Airways, and Turkish Airlines.",
+  "what_to_do_next": "Direct management to implement these strategic recommendations, prioritizing high-priority actions and closely monitoring progress against set targets."
 }
