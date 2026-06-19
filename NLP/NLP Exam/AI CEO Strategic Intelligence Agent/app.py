@@ -203,8 +203,6 @@ with st.sidebar:
         "📋 CEO Briefing",
     ])
     st.divider()
-    st.metric("Documents",   len(docs))
-    st.metric("Sources",     len(set(d["source"] for d in docs)))
 
     # ── LIVE clock — runs in the browser (JS), ticks every second ──
     components.html(
@@ -230,12 +228,22 @@ with st.sidebar:
 # HELPER: page hero banner
 # ─────────────────────────────────────────────────────────────────────────────
 def hero(icon, title, subtitle, color="#05164D"):
+    """Editorial masthead header — same design language as the magazine cover."""
     st.markdown(f"""
     <div style="background:linear-gradient(120deg,{color} 0%,#0a2570 100%);
-                padding:28px 32px; border-radius:16px; margin-bottom:24px;
-                border-left:6px solid #F9BA00; box-shadow:0 4px 20px rgba(5,22,77,.2)">
-        <h1 style="color:white;margin:0;font-size:2rem">{icon} {title}</h1>
-        <p  style="color:#b8c8ff;margin:6px 0 0">{subtitle}</p>
+                padding:22px 32px 26px; border-radius:16px; margin-bottom:26px;
+                box-shadow:0 8px 30px rgba(5,22,77,.28); overflow:hidden">
+      <div style="display:flex;justify-content:space-between;align-items:center;
+           border-bottom:2px solid #F9BA00;padding-bottom:10px;margin-bottom:16px">
+        <span style="color:#F9BA00;font-weight:700;letter-spacing:3px;font-size:.72rem;text-transform:uppercase">
+          Strategic Intelligence Briefing</span>
+        <span style="color:#9fb0d6;letter-spacing:2px;font-size:.72rem">VOL. 1 · JUNE 2026</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+        <span style="font-size:2.4rem;line-height:1">{icon}</span>
+        <span style="color:#fff;font-weight:800;font-size:2.2rem;letter-spacing:-.5px">{title}</span>
+      </div>
+      <p style="color:#b8c8ff;margin:10px 0 0;font-size:1.06rem">{subtitle}</p>
     </div>
     """, unsafe_allow_html=True)
 
@@ -525,23 +533,42 @@ elif page == "📊 Sentiment":
 # ─────────────────────────────────────────────────────────────────────────────
 elif page == "🎯 Recommendations":
     hero("🎯", "Strategic Recommendations", "Evidence-based actions for Lufthansa leadership")
+    PRIO_COL = {"High": "#e74c3c", "Medium": "#e67e22", "Low": "#2ecc71"}
     for i, rec in enumerate(recommendations, 1):
-        with st.container(border=True):
-            st.markdown(f"### {i}. {rec['recommendation']}")
-            st.markdown(
-                f"{PRIORITY.get(rec.get('priority'), rec.get('priority', '—'))} priority "
-                f"&nbsp;·&nbsp; **Risk level:** {rec.get('risk_level', '—')}"
-            )
-            st.markdown(f"**💡 Why this recommendation**\n\n{rec.get('justification', '')}")
-            st.markdown(f"**📈 Expected impact**\n\n{rec.get('expected_impact', '')}")
-
-            st.markdown("**📎 Supporting evidence**")
-            for e in rec.get("supporting_evidence", []):
-                st.markdown(f"- {e}")
-
-            with st.expander("🔗 Sources"):
-                for u in rec.get("sources", []):
-                    st.markdown(f"- {u}")
+        pr   = rec.get("priority", "—")
+        col  = PRIO_COL.get(pr, "#05164D")
+        head = html.escape(rec.get("recommendation", ""))
+        why  = html.escape(rec.get("justification", ""))
+        imp  = html.escape(rec.get("expected_impact", ""))
+        risk = html.escape(str(rec.get("risk_level", "—")))
+        ev   = "".join(f"<li style='margin:5px 0'>{html.escape(e)}</li>"
+                       for e in rec.get("supporting_evidence", []))
+        st.markdown(f"""
+        <div style="border:1px solid rgba(128,140,180,.25);border-left:6px solid {col};
+             border-radius:14px;padding:22px 28px;margin-bottom:6px;background:rgba(128,140,180,.05)">
+          <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px">
+            <span style="background:{col};color:#fff;font-weight:800;border-radius:50%;width:30px;height:30px;
+                 display:inline-flex;align-items:center;justify-content:center;font-size:.9rem">{i}</span>
+            <span style="color:{col};font-weight:700;letter-spacing:2px;text-transform:uppercase;font-size:.72rem">
+              Recommendation</span>
+            <span style="margin-left:auto;color:#9aa6c4;font-size:.78rem;letter-spacing:.5px">
+              {PRIORITY.get(pr, pr)} PRIORITY &nbsp;·&nbsp; RISK: {risk}</span>
+          </div>
+          <div style="font-family:Georgia,'Times New Roman',serif;font-size:1.55rem;font-weight:700;
+               line-height:1.25;margin-bottom:16px">{head}</div>
+          <div style="border-left:3px solid {col};padding:2px 0 2px 16px;margin-bottom:18px;
+               font-style:italic;font-size:1.08rem;line-height:1.6;opacity:.92">“{why}”</div>
+          <div style="color:#8493b8;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;
+               font-size:.7rem;margin-bottom:4px">📈 Expected impact</div>
+          <div style="line-height:1.6;margin-bottom:18px">{imp}</div>
+          <div style="color:#8493b8;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;
+               font-size:.7rem;margin-bottom:2px">📎 Supporting evidence</div>
+          <ul style="margin:0;padding-left:20px;line-height:1.55">{ev}</ul>
+        </div>
+        """, unsafe_allow_html=True)
+        with st.expander("🔗 Sources"):
+            for u in rec.get("sources", []):
+                st.markdown(f"- {u}")
         st.write("")
 
 
@@ -550,17 +577,32 @@ elif page == "🎯 Recommendations":
 # ─────────────────────────────────────────────────────────────────────────────
 elif page == "📋 CEO Briefing":
     hero("📋", "CEO Briefing", "One-page executive summary for leadership")
-    with st.container(border=True):
-        st.subheader("📌 What happened?")
-        st.write(briefing.get("what_happened", ""))
-    st.write("")
-    with st.container(border=True):
-        st.subheader("💡 Why does it matter?")
-        st.write(briefing.get("why_it_matters", ""))
-    st.write("")
-    with st.container(border=True):
-        st.subheader("✅ What should management do next?")
-        st.write(briefing.get("what_to_do_next", ""))
+
+    raw_wh  = briefing.get("what_happened", "")
+    cap     = html.escape(raw_wh[:1])               # drop-cap letter
+    wh_rest = html.escape(raw_wh[1:])
+    wm      = html.escape(briefing.get("why_it_matters", ""))
+    nx      = html.escape(briefing.get("what_to_do_next", ""))
+
+    SERIF = "font-family:Georgia,'Times New Roman',serif;font-size:1.1rem;line-height:1.8;text-align:justify"
+    KICK  = ("color:#F9BA00;font-weight:700;letter-spacing:4px;text-transform:uppercase;font-size:.78rem;"
+             "border-bottom:2px solid rgba(249,186,0,.4);padding-bottom:8px;margin:26px 0 16px")
+
+    st.markdown(f"""
+    <div style="border:1px solid rgba(128,140,180,.25);border-radius:14px;padding:28px 36px;
+         background:rgba(128,140,180,.05)">
+      <div style="{KICK};margin-top:0">📌 What happened</div>
+      <div style="{SERIF}">
+        <span style="float:left;font-family:Georgia,serif;font-size:3.6rem;line-height:.78;color:#F9BA00;
+             font-weight:700;margin:6px 12px 0 0">{cap}</span>{wh_rest}</div>
+
+      <div style="{KICK}">💡 Why it matters</div>
+      <div style="{SERIF}">{wm}</div>
+
+      <div style="{KICK}">✅ What to do next</div>
+      <div style="{SERIF}">{nx}</div>
+    </div>
+    """, unsafe_allow_html=True)
 
 
 # ─────────────────────────────────────────────────────────────────────────────
