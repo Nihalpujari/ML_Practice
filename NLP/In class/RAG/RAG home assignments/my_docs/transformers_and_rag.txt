@@ -1,0 +1,25 @@
+Transformers, Embeddings, and Retrieval-Augmented Generation
+
+The transformer architecture, introduced in 2017, changed natural language processing. Its central
+idea is the self-attention mechanism, which lets the model weigh the importance of every word in a
+sequence relative to every other word. Unlike older recurrent networks, transformers process all
+tokens in parallel, which makes them fast to train on large datasets.
+
+Transformers are the foundation of large language models such as GPT and BERT. These models are first
+pre-trained on huge text corpora and then fine-tuned for specific tasks like translation,
+summarisation, or question answering.
+
+A key building block for search is the embedding. An embedding model turns a piece of text into a
+vector of numbers so that texts with similar meaning end up close together in vector space. Models
+like all-MiniLM-L6-v2 produce 384-dimensional embeddings and are widely used for semantic search.
+
+Retrieval-Augmented Generation, or RAG, combines retrieval with generation. Instead of relying only
+on what a language model memorised during training, a RAG system first retrieves relevant documents
+from a knowledge base using embeddings, and then passes those documents to the model as context. This
+helps the model give accurate, up-to-date answers and reduces hallucination, because the answer is
+grounded in real retrieved text.
+
+A typical RAG pipeline has four steps: split documents into chunks, embed the chunks and store them,
+retrieve the most similar chunks for a user query, and finally generate an answer using the retrieved
+chunks as context. Choosing a good chunk size and the right number of retrieved chunks, often called
+top_k, has a large effect on the quality of the final answer.

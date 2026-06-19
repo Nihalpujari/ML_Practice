@@ -1,0 +1,22 @@
+AI for Sustainability and Climate Action
+
+Artificial intelligence is becoming an important tool in the fight against climate change and in the
+broader effort to build a more sustainable world. By analysing huge amounts of environmental data,
+AI can find patterns that humans would miss and help decision makers act faster.
+
+In energy, machine learning is used to forecast electricity demand and to predict how much power wind
+and solar farms will generate. Accurate forecasts let grid operators rely more on renewable energy and
+less on fossil fuels. Reinforcement learning has also been used to optimise cooling in large data
+centres, cutting their energy use significantly.
+
+In agriculture, computer vision and predictive models help farmers use water and fertiliser more
+efficiently. Satellite imagery combined with AI can detect deforestation, monitor crop health, and
+estimate how much carbon is stored in forests. These tools support both food security and conservation.
+
+AI also helps with monitoring and disaster response. Models can predict floods, droughts, and wildfires
+earlier, giving communities more time to prepare. Computer vision detects oil spills and plastic waste
+in the ocean from satellite images.
+
+However, AI itself has an environmental cost. Training very large models consumes a lot of electricity
+and produces carbon emissions. Researchers are now working on more efficient models and on measuring the
+carbon footprint of AI so that the technology helps the planet more than it harms it.
