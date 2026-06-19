@@ -91,29 +91,29 @@ flowchart TD
     end
 
     SOURCES -->|DDGS web search| COLLECT[Task 1: Collector<br/>clean + dedup by URL & text]
-    COLLECT --> JSON[(lufthansa_data.json<br/>195 clean docs)]
+    COLLECT -->|text + url + source| JSON[(lufthansa_data.json<br/>195 clean docs)]
 
-    JSON --> PROC[Task 2: embed<br/>all-MiniLM-L6-v2]
-    PROC --> CHROMA[(ChromaDB<br/>vectors + text + metadata)]
-    PROC --> BM25[(BM25 keyword index)]
+    JSON -->|clean text to embed| PROC[Task 2 + 3: process & embed<br/>all-MiniLM-L6-v2]
+    PROC -->|384-dim vectors + metadata| CHROMA[(ChromaDB<br/>vectors + text + metadata)]
+    PROC -->|word tokens| BM25[(BM25 keyword index)]
     PROC -. doc_emb .-> COS[cosine_similarity<br/>on embeddings]
 
-    JSON --> INTEL[Task 4: Intelligence Engine<br/>zero-shot category + 3-class sentiment]
-    INTEL --> LABELED[(lufthansa_labeled.json)]
+    JSON -->|raw text to classify| INTEL[Task 4: Intelligence Engine<br/>zero-shot category + 3-class sentiment]
+    INTEL -->|+ category + sentiment labels| LABELED[(lufthansa_labeled.json)]
 
     CHROMA -->|collection.query| SEM[Semantic retrieval]
-    BM25 --> HYB[Hybrid retrieval<br/>BM25 + cosine, normalize + combine]
-    COS --> HYB
+    BM25 -->|keyword score| HYB[Hybrid retrieval<br/>normalize + 50/50 weighted score fusion]
+    COS -->|dense score| HYB
 
-    SEM --> AGENT[Task 5: AI CEO Agent<br/>Ollama llama3.1:8b]
+    SEM -->|top-k evidence| AGENT[Task 5: AI CEO Agent<br/>Ollama llama3.1:8b]
     HYB -. built &amp; tested, not yet wired .-> AGENT
-    AGENT --> RECS[(recommendations.json<br/>Task 6: rec + justification + evidence + impact + risk + priority)]
-    RECS --> BRIEF[Section 7: CEO Briefing]
-    BRIEF --> CB[(ceo_briefing.json)]
+    AGENT -->|structured JSON| RECS[(recommendations.json<br/>Task 6: rec + justification + evidence + impact + risk + priority)]
+    RECS -->|synthesise| BRIEF[Section 7: CEO Briefing]
+    BRIEF -->|summary| CB[(ceo_briefing.json)]
 
-    LABELED --> DASH[Executive Dashboard<br/>Streamlit · 8 pages + live chat]
-    RECS --> DASH
-    CB --> DASH
+    LABELED -->|load| DASH[Executive Dashboard<br/>Streamlit · 8 pages + live chat]
+    RECS -->|load| DASH
+    CB -->|load| DASH
 ```
 
 > **Accuracy notes (matches the code):** Cleaning happens **once at collection** (Task 1), so `lufthansa_data.json` is already clean (195 docs) and every downstream stage reads clean data. Retrieval has **two paths** — *semantic* via `collection.query` (used by the agent **and** the live chat) and *hybrid* = BM25 + cosine-on-embeddings (built & tested standalone, not yet wired into the agent). The agent currently uses **semantic** retrieval.
