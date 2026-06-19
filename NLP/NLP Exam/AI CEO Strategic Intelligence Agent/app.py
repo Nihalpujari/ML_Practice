@@ -14,6 +14,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import streamlit as st
+import streamlit.components.v1 as components
 import chromadb, ollama
 from sentence_transformers import SentenceTransformer
 from sklearn.metrics.pairwise import cosine_similarity
@@ -142,9 +143,6 @@ def load_retrieval():
 docs, recommendations, briefing   = load_data()
 collection, emb_model, texts, doc_emb = load_retrieval()
 
-last_update = datetime.fromtimestamp(
-    os.path.getmtime("lufthansa_data.json")).strftime("%d %b %Y, %H:%M")
-
 PRIORITY  = {"High":"🔴 High",      "Medium":"🟠 Medium", "Low":"🟢 Low"}
 SENTIMENT = {"positive":"🟢 Positive","neutral":"⚪ Neutral","negative":"🔴 Negative"}
 
@@ -207,9 +205,25 @@ with st.sidebar:
     st.divider()
     st.metric("Documents",   len(docs))
     st.metric("Sources",     len(set(d["source"] for d in docs)))
-    st.caption(f"🕒 {last_update}")
-    st.divider()
-    st.caption("")
+
+    # ── LIVE clock — runs in the browser (JS), ticks every second ──
+    components.html(
+        """
+        <div id="clock" style="font-family:'Source Sans Pro',sans-serif;
+             color:#dde4ff; font-size:0.9rem; letter-spacing:.3px;"></div>
+        <script>
+        function tick(){
+            const now = new Date();
+            const d = now.toLocaleDateString([], {day:'2-digit', month:'short', year:'numeric'});
+            const t = now.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', second:'2-digit'});
+            document.getElementById('clock').textContent = '🕒 ' + d + ' · ' + t;
+        }
+        tick(); setInterval(tick, 1000);
+        </script>
+        <style>body{margin:0;background:transparent;overflow:hidden;}</style>
+        """,
+        height=26,
+    )
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -291,58 +305,98 @@ def source_filter(items, key):
 # PAGE: Overview
 # ─────────────────────────────────────────────────────────────────────────────
 if page == "🏠 Overview":
-    # full-screen background if file present
-    if os.path.exists("background.jpg"):
-        with open("background.jpg", "rb") as f:
-            b64 = base64.b64encode(f.read()).decode()
-        st.markdown(f"""<style>.stApp{{
-            background-image:linear-gradient(rgba(2,16,58,.6),rgba(2,16,58,.75)),
-                             url("data:image/jpeg;base64,{b64}");
-            background-size:cover;background-position:center;background-attachment:fixed;
-        }}</style>""", unsafe_allow_html=True)
-        st.markdown("<h1 style='color:white;font-size:3rem;margin-bottom:0'>🛫 AI CEO — Lufthansa</h1>",
-                    unsafe_allow_html=True)
-        st.markdown("<p style='color:#b8c8ff;font-size:1.1rem'>Executive Intelligence Dashboard · open-source · evidence-based</p>",
-                    unsafe_allow_html=True)
-    else:
-        if os.path.exists("lufthansa.png"):
-            st.image("lufthansa.png", use_container_width=True)
-        st.markdown("<h1 style='color:#05164D;font-size:2.5rem'>🛫 AI CEO — Lufthansa</h1>",
-                    unsafe_allow_html=True)
-        st.caption("Executive Intelligence Dashboard · open-source · evidence-based")
+    # magazine "paper": solid dark navy behind the whole page
+    st.markdown("<style>.stApp{background:#0a1330 !important;}</style>", unsafe_allow_html=True)
 
-    st.write("")
-    col1, col2 = st.columns(2)
-    with col1:
-        with st.container(border=True):
-            st.subheader("✈️ About Lufthansa")
-            st.write(
-                "Deutsche Lufthansa AG is Germany's flagship carrier and one of Europe's largest "
-                "airline groups. With major hubs in **Frankfurt** and **Munich** and as a founding "
-                "member of the **Star Alliance**, the group spans passenger aviation, cargo "
-                "(Lufthansa Cargo) and MRO (Lufthansa Technik) — one of the world's largest fleets."
-            )
-    with col2:
-        with st.container(border=True):
-            st.subheader("💡 Why I chose Lufthansa")
-            st.write(
-                "I love travelling — mostly by aeroplane. I'm fascinated by the **discipline and "
-                "planning** behind how an airline runs: managing thousands of flights, crew, and "
-                "aircraft schedules every day. And one day, I'd love to see the cockpit. ✈️"
-            )
+    # cover image (jpg preferred, png fallback, gradient if neither)
+    cover_bg = "linear-gradient(135deg,#05164D,#0a2570)"
+    for fname, mime in [("background.jpg", "jpeg"), ("lufthansa.png", "png")]:
+        if os.path.exists(fname):
+            with open(fname, "rb") as f:
+                b64 = base64.b64encode(f.read()).decode()
+            cover_bg = f"url('data:image/{mime};base64,{b64}')"
+            break
 
-    st.write("")
-    c1, c2, c3, c4 = st.columns(4)
-    c1.metric("Company",       "Lufthansa")
-    c2.metric("Industry",      "Aviation")
-    c3.metric("Documents",     len(docs))
-    c4.metric("Data sources",  len(set(x["source"] for x in docs)))
+    opp   = sum(d["category"] == "opportunity" for d in docs)
+    risk  = sum(d["category"] == "risk"        for d in docs)
+    trend = sum(d["category"] == "trend"       for d in docs)
+    n_src = len(set(d["source"] for d in docs))
 
-    st.write("")
-    o1, o2, o3 = st.columns(3)
-    o1.metric("🚀 Opportunities", sum(d["category"] == "opportunity" for d in docs))
-    o2.metric("⚠️ Risks",         sum(d["category"] == "risk"        for d in docs))
-    o3.metric("📈 Trends",        sum(d["category"] == "trend"       for d in docs))
+    coverlines = [
+        f"🚀 &nbsp;{opp} opportunities the board can’t ignore",
+        f"⚠️ &nbsp;Inside the {risk} risks shaping the year ahead",
+        f"📈 &nbsp;{trend} trends to watch — SAF, A350s &amp; beyond",
+        "💬 &nbsp;Ask the AI CEO — live, anything you want",
+    ]
+    lines_html = "".join(
+        "<div style='display:flex;align-items:center;gap:12px;margin:9px 0'>"
+        "<span style='width:4px;height:24px;background:#F9BA00;border-radius:2px'></span>"
+        f"<span style='color:#fff;font-size:1.06rem;font-weight:600;"
+        f"text-shadow:0 2px 10px rgba(0,0,0,.75)'>{t}</span></div>"
+        for t in coverlines
+    )
+
+    st.markdown(f"""
+    <div style="position:relative;min-height:80vh;border-radius:18px;overflow:hidden;
+         background-image:linear-gradient(180deg,rgba(3,12,40,.30) 0%,rgba(3,12,40,.55) 50%,rgba(3,12,40,.93) 100%),{cover_bg};
+         background-size:cover;background-position:center;
+         display:flex;flex-direction:column;justify-content:space-between;
+         padding:28px 36px;box-shadow:0 16px 50px rgba(0,0,0,.5)">
+
+      <div style="display:flex;justify-content:space-between;align-items:center;
+           border-bottom:2px solid #F9BA00;padding-bottom:10px">
+        <span style="color:#F9BA00;font-weight:700;letter-spacing:3px;font-size:.78rem;text-transform:uppercase">
+          Strategic Intelligence Briefing</span>
+        <span style="color:#dfe6f5;letter-spacing:2px;font-size:.78rem">VOL. 1 · JUNE 2026</span>
+      </div>
+
+      <div>
+        <div style="font-size:5.5rem;font-weight:900;color:#fff;line-height:.92;letter-spacing:-2px;
+             text-shadow:0 4px 24px rgba(0,0,0,.55)">AI&nbsp;CEO</div>
+        <div style="color:#F9BA00;font-weight:700;letter-spacing:6px;font-size:1.05rem;
+             text-transform:uppercase;margin-top:8px">The Lufthansa Edition</div>
+        <div style="color:#eef2ff;font-size:1.25rem;font-style:italic;margin-top:16px;max-width:560px;
+             text-shadow:0 2px 12px rgba(0,0,0,.65)">
+          “If you were the CEO today — what would you do next, and why?”</div>
+      </div>
+
+      <div>
+        {lines_html}
+        <div style="margin-top:16px;border-top:1px solid rgba(255,255,255,.25);padding-top:12px;
+             color:#cbd6f0;letter-spacing:2px;font-size:.76rem;text-transform:uppercase">
+          {len(docs)} documents · {n_src} sources · Llama 3.1 8B · 100% open-source</div>
+      </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # ── FROM THE EDITOR (About + Why, editorial style) ──
+    st.markdown("""
+    <div style="margin-top:26px">
+      <div style="color:#F9BA00;font-weight:700;letter-spacing:4px;text-transform:uppercase;font-size:.82rem;
+           border-bottom:2px solid rgba(249,186,0,.4);padding-bottom:8px;margin-bottom:16px">From the Editor</div>
+      <div style="display:flex;gap:36px;flex-wrap:wrap">
+        <div style="flex:1;min-width:280px;font-family:Georgia,'Times New Roman',serif;color:#dfe6f5;
+             font-size:1.06rem;line-height:1.78;text-align:justify">
+          <span style="float:left;font-family:Georgia,serif;font-size:3.4rem;line-height:.8;color:#F9BA00;
+               font-weight:700;margin:6px 10px 0 0">D</span>eutsche Lufthansa AG is Germany’s flagship
+          carrier and one of Europe’s largest airline groups. With major hubs in
+          <strong style="color:#fff">Frankfurt</strong> and <strong style="color:#fff">Munich</strong>,
+          and as a founding member of the <strong style="color:#fff">Star Alliance</strong>, the group
+          spans passenger aviation, cargo (Lufthansa Cargo) and aircraft maintenance (Lufthansa Technik) —
+          operating one of the world’s largest fleets.
+        </div>
+        <div style="flex:1;min-width:280px;font-family:Georgia,'Times New Roman',serif;color:#dfe6f5;
+             font-size:1.06rem;line-height:1.78;text-align:justify">
+          <div style="font-family:sans-serif;color:#F9BA00;font-weight:700;font-size:.78rem;letter-spacing:2px;
+               text-transform:uppercase;margin-bottom:8px">Why I chose Lufthansa</div>
+          I love travelling — mostly by aeroplane. I’m fascinated by the
+          <strong style="color:#fff">discipline and planning</strong> behind how an airline runs: managing
+          thousands of flights, crew and aircraft schedules every single day. And one day, I’d love to see
+          the cockpit. ✈️
+        </div>
+      </div>
+    </div>
+    """, unsafe_allow_html=True)
 
 
 # ─────────────────────────────────────────────────────────────────────────────
