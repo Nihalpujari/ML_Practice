@@ -99,7 +99,7 @@ flowchart TD
     PROC -. doc_emb .-> COS[cosine_similarity<br/>on embeddings]
 
     JSON -->|raw text to classify| INTEL[Task 4: Intelligence Engine<br/>zero-shot category + 3-class sentiment]
-    INTEL -->|+ category + sentiment labels| LABELED[(lufthansa_labeled.json)]
+    INTEL -->|+category + sentiment labels| LABELED[(lufthansa_labeled.json)]
 
     CHROMA -->|collection.query| SEM[Semantic retrieval]
     BM25 -->|keyword score| HYB[Hybrid retrieval<br/>normalize + 50/50 weighted score fusion]
