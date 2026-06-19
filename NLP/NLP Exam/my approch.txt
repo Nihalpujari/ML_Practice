@@ -21,9 +21,10 @@ data collection : DDGs
 | Task 5 & 6: CEO Agent + Recs    | CEO Agent.ipynb                      | DONE          | 18/06/2026 | ollama (llama3.1:8b), RAG (Chroma retrieve + prompt + format=json)                                   | structured recs -> recommendations.json (5)              |
 | Section 7: CEO Briefing         | CEO Agent.ipynb                      | DONE          | 18/06/2026 | ollama (llama3.1:8b), format=json                                                                    | exec summary -> ceo_briefing.json (3 questions)          |
 | Cleaning pass (clean at source) | Data Collection.ipynb (+ rebuilds)   | DONE          | 18/06/2026 | re, dict text-dedup, low-info filter, chromadb rebuild                                               | clean -> 195 docs; rebuilt Chroma/BM25/labels/recs       |
-| Dashboard (7 sections)          | app.py (Streamlit)                   | NEXT          |    --      | streamlit, matplotlib                                                                                | Company/Market/Opportunity/Risk/Sentiment/Recs/Briefing  |
+| Dashboard (8 sections)          | app.py (Streamlit)                   | DONE          | 19/06/2026 | streamlit (radio nav, popover, form, components.html), matplotlib, base64, html                     | Overview/Market/Opp/Risk/Trend/Sentiment/Recs/Briefing + live chat |
+| Dashboard UI polish (locked)    | app.py                               | DONE          | 19/06/2026 | streamlit + custom CSS/HTML (magazine cover, editorial mastheads, JS live clock)                    | magazine-cover overview + featured-article recs/briefing |
 | Dashboard bonus: Version 2      | app.py                               | TODO (bonus)  |    --      | streamlit (hybrid_search + semantic compare)                                                         | semantic vs hybrid comparison panel                      |
-| Oral rehearsal                  | (57 saved questions)                 | TODO          |    --      | exam-questions notes                                                                                 | practice concept Q&A + live-coding extend                |
+| Oral rehearsal                  | (66 saved questions)                 | TODO          |    --      | exam-questions notes                                                                                 | practice concept Q&A + live-coding extend                |
 -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 STATUS KEY: DONE = finished | NEXT = doing now | TODO = pending | DRAFTED = written, update as I finish
 
@@ -187,12 +188,44 @@ WHOLE SYSTEM = a RAG pipeline:
 
 -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
+19/06/2026
+
+DASHBOARD  (DONE + UI LOCKED)   [file: app.py, Streamlit]
+- Single file, flat folder, multi-page via sidebar st.radio. Loads SAVED artifacts (fast); LLM only called live in the chat.
+- 8 pages: Overview / Market Intelligence / Opportunities / Risks / TRENDS (new) / Sentiment / Recommendations / CEO Briefing.
+- Caching: @st.cache_data (JSON data) vs @st.cache_resource (Chroma collection + embedding model = heavy objects).
+- LIVE CHAT (replaces a separate "Ask" page): a floating round button bottom-right via st.popover + CSS (position:fixed).
+    Click -> popup with chat history + st.form(clear_on_submit) input -> calls ceo_agent(question) LIVE (only live-Ollama spot).
+    st.form is used so a keystroke doesn't rerun/close the popover; submit clears the box. History kept in st.session_state.
+- MARKET INTELLIGENCE: 4 source tabs (News/Reddit/Competitor/Company) showing FULL text (removed the old [:220] truncation).
+- FILTERS (deliberate design choice for the oral):
+    Opportunities + Trends -> filter by SENTIMENT (positive/neutral/negative is meaningful there).
+    Risks -> filter by SOURCE (news/competitor/reddit/company). WHY: category & sentiment are INDEPENDENT labels, so
+    "positive risk" is nonsense; the useful question for a risk is "where is it coming from?" not "what's its tone?".
+- SENTIMENT page: matplotlib pie given a navy facecolor + white label/percent text so it's readable on ANY theme.
+- VISUAL/UI (locked 19/06):
+    * Magazine-cover Overview: full-bleed background image (base64), masthead "AI CEO / THE LUFTHANSA EDITION",
+      editorial cover-lines teasing the live opp/risk/trend counts, VOL.1 issue line + footer stats, "FROM THE EDITOR"
+      About+Why in serif w/ drop-cap.
+    * Editorial hero() masthead on every content page (kicker + yellow rule + big title) = magazine running header.
+    * Recommendations = "featured article" cards: numbered badge + left border tinted by PRIORITY (red/orange/green),
+      serif headline, italic pull-quote justification, evidence list, sources expander.
+    * CEO Briefing = editorial article: drop-cap lead, serif justified body, yellow kicker section heads.
+    * Brand CSS: navy #05164D + yellow #F9BA00 sidebar, category colour accents (opp green/risk red/trend blue).
+    * LIVE CLOCK in sidebar via st.components.v1.html (JS setInterval) -- a clock can't be done in pure Streamlit
+      because reruns are EVENT-DRIVEN (only on interaction), not a continuous loop; JS ticks in the browser instead.
+      (st.markdown CANNOT run <script> -- Streamlit strips it; only components.html executes JS, inside an iframe.)
+    * All LLM-generated text is html.escape()'d before going into HTML cards so a stray < or & can't break the layout.
+- DOM note: verified test-ids against the installed Streamlit 1.37 JS bundle -> metric container is stMetric (NOT
+  "metric-container"); popover = stPopover / stPopoverButton / stPopoverBody; widget wrapper = element-container.
+
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 =================== NEXT STEPS ===================
-- NEXT: Dashboard (Streamlit app.py, 7 sections): Company Overview / Market Intelligence / Opportunity Monitor /
-  Risk Monitor / Sentiment Analysis / Strategic Recommendations / CEO Briefing.
-  Each section just LOADS a saved file (lufthansa_labeled.json, recommendations.json, ceo_briefing.json) -> fast.
-- Dashboard bonus: Version 2 = semantic vs hybrid comparison panel.
-- README polish (mark all done) + oral rehearsal (62 saved questions).
+- Dashboard DONE + UI LOCKED (19/06). 8 pages, magazine look, live chat. Runs: streamlit run app.py (needs Ollama for chat).
+- Dashboard bonus (optional): Version 2 = semantic vs hybrid comparison panel.
+- README polish (flip dashboard to DONE).
+- ORAL REHEARSAL (66 saved questions) = highest priority, 50% of grade.
 - (optional) Option B: wire hybrid_search() into ceo_agent so the agent uses hybrid (not just semantic).
 
 DATA FILES (artifacts the dashboard reads) — all now consistent at 195:

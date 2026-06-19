@@ -36,7 +36,8 @@ evidence-based recommendations** — presented in an interactive dashboard.
 | Task 4 — Strategic Intelligence Engine (classify + sentiment) | ✅ Done |
 | Task 5 & 6 — AI CEO Agent + Evidence-Based Recommendations | ✅ Done |
 | Section 7 — CEO Briefing (executive summary) | ✅ Done |
-| Executive Dashboard (Streamlit, 7 sections) | 🔶 Next |
+| Executive Dashboard (Streamlit, 8 pages + live chat) | ✅ Done |
+| Dashboard bonus — Semantic vs Hybrid comparison panel | ⚪ Optional |
 
 ---
 
@@ -50,7 +51,10 @@ evidence-based recommendations** — presented in an interactive dashboard.
 - **Sentiment analysis** (news vs. public)
 - **Local open-source LLM reasoning** (no paid APIs) for strategic recommendations
 - **Evidence-based recommendations** with supporting sources, expected impact, and risk
-- **Executive dashboard** for decision-makers
+- **Executive dashboard** (Streamlit) — 8 pages: Overview · Market Intelligence · Opportunities ·
+  Risks · Trends · Sentiment · Recommendations · CEO Briefing
+- **Live "Ask the AI CEO" chat** — a floating widget that runs the full RAG agent on any question
+  the user types, returning a grounded, structured recommendation with clickable sources
 
 ---
 
@@ -86,10 +90,10 @@ flowchart TD
         CO[Company official site]
     end
 
-    SOURCES -->|DDGS web search| COLLECT[Task 1: Collector<br/>dedup by URL]
-    COLLECT --> JSON[(lufthansa_data.json<br/>raw docs)]
+    SOURCES -->|DDGS web search| COLLECT[Task 1: Collector<br/>clean + dedup by URL & text]
+    COLLECT --> JSON[(lufthansa_data.json<br/>195 clean docs)]
 
-    JSON --> PROC[Task 2/3: clean + embed<br/>all-MiniLM-L6-v2]
+    JSON --> PROC[Task 2: embed<br/>all-MiniLM-L6-v2]
     PROC --> CHROMA[(ChromaDB<br/>vectors + text + metadata)]
     PROC --> BM25[(BM25 keyword index)]
     PROC -. doc_emb .-> COS[cosine_similarity<br/>on embeddings]
@@ -107,12 +111,12 @@ flowchart TD
     RECS --> BRIEF[Section 7: CEO Briefing]
     BRIEF --> CB[(ceo_briefing.json)]
 
-    LABELED --> DASH[Executive Dashboard<br/>Streamlit, 7 sections]
+    LABELED --> DASH[Executive Dashboard<br/>Streamlit · 8 pages + live chat]
     RECS --> DASH
     CB --> DASH
 ```
 
-> **Accuracy notes (matches the code):** Task 4 reads the **raw** `lufthansa_data.json` (not the cleaned/embedded version). Retrieval has **two paths** — *semantic* via `collection.query` (used by the agent) and *hybrid* = BM25 + cosine-on-embeddings (built & tested standalone, not yet wired into the agent). The agent currently uses **semantic** retrieval.
+> **Accuracy notes (matches the code):** Cleaning happens **once at collection** (Task 1), so `lufthansa_data.json` is already clean (195 docs) and every downstream stage reads clean data. Retrieval has **two paths** — *semantic* via `collection.query` (used by the agent **and** the live chat) and *hybrid* = BM25 + cosine-on-embeddings (built & tested standalone, not yet wired into the agent). The agent currently uses **semantic** retrieval.
 
 ---
 
@@ -218,7 +222,7 @@ positive/negative and was trained on movie reviews, so it forced neutral, factua
 listings) into positive/negative with misleadingly high confidence. Switched to
 `cardiffnlp/twitter-roberta-base-sentiment-latest` (negative/neutral/positive, trained on social
 text) so neutral documents are correctly labeled neutral — confirmed by the result distribution
-(neutral 118, positive 55, negative 27).
+(neutral 109, positive 66, negative 20).
 
 **12. Small models for labeling, LLM for reasoning.** Classification/sentiment over ~195 docs needs
 speed, not reasoning — small specialized models are ideal. The 8B LLM is reserved for Task 5, where
@@ -232,6 +236,19 @@ relocated off the system drive via `OLLAMA_MODELS`.)
 **14. Streamlit for the dashboard.** Pure-Python, minimal boilerplate — faster to build a
 data-centric executive dashboard than Dash's callback wiring.
 
+**15. Static pages load saved JSON; only the chat calls the LLM live.** The 8B model takes ~2.5 min
+per call on CPU, so the recommendations and briefing are *pre-generated once* to
+`recommendations.json` / `ceo_briefing.json` and the dashboard simply loads them (instant). The LLM
+is invoked live in exactly **one** place — the floating "Ask the AI CEO" chat — where the user's own
+question runs through the full RAG agent on demand. Heavy resources (the Chroma collection and the
+embedding model) are cached with `@st.cache_resource`; the JSON data with `@st.cache_data`.
+
+**16. Filter each list page by the axis that's meaningful for it.** Category and sentiment are
+*independent* labels (category = topic, sentiment = tone), so filtering the **Risk** page by sentiment
+would produce nonsense like "positive risks." The Risk page therefore filters by **source** (*where is
+this risk coming from?* — news / competitor / community), while **Trends** and **Opportunities** filter
+by **sentiment** (a "positive vs negative trend" is a genuine, useful distinction).
+
 ---
 
 ## Project Structure
@@ -239,13 +256,18 @@ data-centric executive dashboard than Dash's callback wiring.
 ```
 AI CEO Strategic Intelligence Agent/
 ├── README.md                          # this file
-├── lufthansa_data.json                # collected + deduped documents (Task 1 output)
-├── chroma_db/                         # persistent vector store (Task 2)
-├── Data Collection.ipynb              # Task 1 — DDGS collector
+├── app.py                             # Executive dashboard (Streamlit) — 8 pages + live chat
+├── Data Collection.ipynb              # Task 1 — DDGS collector + clean + dedup
 ├── Knowledge Repository.ipynb         # Task 2/3 + retrieval (semantic + hybrid)
 ├── Strategic Intelligence Engine.ipynb# Task 4 — classification + sentiment
-├── CEO Agent.ipynb                    # Task 5/6 — RAG reasoning + recommendations  (planned)
-└── app.py                             # Executive dashboard (Streamlit)             (planned)
+├── CEO Agent.ipynb                    # Task 5/6 + Section 7 — RAG reasoning + recommendations
+├── chroma_db/                         # persistent vector store (Task 2)
+├── lufthansa_data.json                # 195 clean, deduped documents (Task 1 output)
+├── lufthansa_labeled.json             # same docs + category + sentiment (Task 4 output)
+├── recommendations.json               # 5 pre-generated CEO recommendations (Task 5/6)
+├── ceo_briefing.json                  # executive summary (Section 7)
+├── background.jpg                     # Overview cover image
+└── lufthansa.png                      # sidebar / fallback banner
 ```
 
 ---
@@ -269,21 +291,25 @@ ollama pull llama3.1:8b
 ## How to Run
 
 ```bash
-# Task 1 — collect data            → produces lufthansa_data.json
+# Task 1 — collect data            → produces lufthansa_data.json (195 clean docs)
 #   run: Data Collection.ipynb
 
 # Task 2/3 — build knowledge base  → produces chroma_db/ + retrieval functions
 #   run: Knowledge Repository.ipynb
 
-# Task 4 — classify + sentiment    → produces labeled documents
+# Task 4 — classify + sentiment    → produces lufthansa_labeled.json
 #   run: Strategic Intelligence Engine.ipynb
 
-# Task 5/6 — recommendations       (planned)
-#   run: CEO Agent.ipynb
+# Task 5/6 + Section 7 — recommendations + briefing
+#   run: CEO Agent.ipynb           → produces recommendations.json + ceo_briefing.json
 
-# Dashboard                        (planned)
+# Dashboard (run from this folder)
 streamlit run app.py
 ```
+
+> The dashboard loads the saved JSON artifacts, so it opens instantly. The floating **"Ask the AI CEO"**
+> chat is the only feature that calls the LLM live — it needs **Ollama running** (`ollama serve`) with
+> `llama3.1:8b` pulled.
 
 ---
 
