@@ -1,229 +1,556 @@
 """
 AI CEO: Strategic Intelligence Agent — Lufthansa
-Executive Dashboard (Streamlit) — multi-page via sidebar navigation.
+Executive Dashboard (Streamlit) — multi-page, chat-enabled.
 
 Run from this folder:  streamlit run app.py
-Loads saved artifacts (no live LLM calls) so it's fast + reliable:
-  lufthansa_labeled.json -> docs with category + sentiment
-  recommendations.json   -> 5 strategic recommendations
-  ceo_briefing.json      -> executive summary
+Needs Ollama running for the live chat (floating 💬 button, bottom-right of every page).
 """
 
-import json
-import os
+import json, os, base64, html
 from collections import Counter
 from datetime import datetime
 
+import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import streamlit as st
+import chromadb, ollama
+from sentence_transformers import SentenceTransformer
+from sklearn.metrics.pairwise import cosine_similarity
 
 st.set_page_config(page_title="AI CEO — Lufthansa", page_icon="🛫", layout="wide")
 
 
-# ----------------------------------------------------------------------
-# Load data once (cached)
-# ----------------------------------------------------------------------
+# ─────────────────────────────────────────────────────────────────────────────
+# GLOBAL CSS  — Lufthansa brand (navy #05164D + yellow #F9BA00)
+# ─────────────────────────────────────────────────────────────────────────────
+st.markdown("""
+<style>
+/* ── sidebar: always dark navy, regardless of Streamlit theme ── */
+[data-testid="stSidebar"] {
+    background: linear-gradient(180deg, #02103a 0%, #05164D 70%, #091d5e 100%) !important;
+    border-right: 3px solid #F9BA00 !important;
+}
+/* Only target text/label elements inside sidebar, not every div */
+[data-testid="stSidebar"] p,
+[data-testid="stSidebar"] span,
+[data-testid="stSidebar"] label { color: #dde4ff !important; }
+[data-testid="stSidebar"] h1   { color: white !important; letter-spacing:1px; }
+[data-testid="stSidebar"] [data-testid="stMetricValue"] { color: #F9BA00 !important; font-weight:700; }
+
+/* ── metric cards: yellow accent + subtle frame (theme-safe, works on the bg image) ── */
+.main [data-testid="stMetric"] {
+    border: 1px solid rgba(5,22,77,.18);
+    border-left: 5px solid #F9BA00;
+    border-radius: 12px;
+    padding: 14px 18px;
+    background: rgba(13,27,62,.55);          /* navy glass: readable over the hero image */
+    box-shadow: 0 3px 15px rgba(5,22,77,.18);
+}
+.main [data-testid="stMetric"] [data-testid="stMetricLabel"] p { color:#b8c8ff !important; }
+.main [data-testid="stMetric"] [data-testid="stMetricValue"] { color:#ffffff !important; font-weight:800; }
+
+/* ── headings: only inside main content, not sidebar ── */
+.main h1 { font-weight:800; letter-spacing:-.5px; }
+.main h2, .main h3 { font-weight:700; }
+
+/* ── larger, more readable body text in the main content ── */
+.main [data-testid="stMarkdownContainer"] p,
+.main [data-testid="stMarkdownContainer"] li { font-size: 1.07rem; line-height: 1.65; }
+/* keep the chat popover text at normal size (it's compact) */
+[data-testid="stPopoverBody"] [data-testid="stMarkdownContainer"] p,
+[data-testid="stPopoverBody"] [data-testid="stMarkdownContainer"] li { font-size: .95rem; line-height: 1.5; }
+
+/* ── bordered containers (cards) ── */
+[data-testid="stVerticalBlockBorderWrapper"] {
+    border-radius: 14px !important;
+    box-shadow: 0 3px 14px rgba(5,22,77,.08) !important;
+    border-color: rgba(5,22,77,0.2) !important;
+    /* No background override — lets Streamlit's theme (light/dark) control it */
+}
+
+/* ── tabs ── */
+[data-baseweb="tab-list"]  { border-radius:10px; padding:4px; }
+[data-baseweb="tab"]       { border-radius:8px !important; }
+[aria-selected="true"]     { background: #05164D !important; color:white !important; }
+
+/* ── FLOATING CHAT WIDGET (st.popover pinned to bottom-right corner) ── */
+/* pin the popover wrapper itself; width:auto shrinks it to the button so */
+/* right/bottom anchor it to the true corner (not the full-width row).    */
+[data-testid="stPopover"] {
+    position: fixed !important;
+    bottom: 24px !important;
+    right: 24px !important;
+    left: auto !important;
+    top: auto !important;
+    width: auto !important;
+    max-width: 80px !important;
+    z-index: 1000001 !important;
+}
+/* the trigger -> a round 💬 bubble (like Air India's AI.g button) */
+[data-testid="stPopoverButton"] {
+    border-radius: 50% !important;
+    width: 64px !important;
+    height: 64px !important;
+    min-height: 64px !important;
+    font-size: 28px !important;
+    background: #05164D !important;
+    color: white !important;
+    border: 3px solid #F9BA00 !important;
+    box-shadow: 0 6px 24px rgba(5,22,77,.5) !important;
+    padding: 0 !important;
+    transition: transform .15s ease;
+}
+[data-testid="stPopoverButton"]:hover { transform: scale(1.08); }
+/* hide the little dropdown chevron so it's a clean bubble */
+[data-testid="stPopoverButton"] svg { display: none !important; }
+/* the popup panel that opens above the button */
+[data-testid="stPopoverBody"] {
+    width: 380px !important;
+    max-height: 72vh !important;
+}
+
+/* ── success / warning banners ── */
+[data-testid="stSuccess"] { border-radius:10px; }
+[data-testid="stWarning"] { border-radius:10px; }
+
+/* ── divider ── */
+hr { border-color: rgba(5,22,77,0.2) !important; }
+</style>
+""", unsafe_allow_html=True)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# DATA LOADING
+# ─────────────────────────────────────────────────────────────────────────────
 @st.cache_data
 def load_data():
     docs     = json.load(open("lufthansa_labeled.json", encoding="utf-8"))
-    recs     = json.load(open("recommendations.json", encoding="utf-8"))
-    briefing = json.load(open("ceo_briefing.json", encoding="utf-8"))
+    recs     = json.load(open("recommendations.json",   encoding="utf-8"))
+    briefing = json.load(open("ceo_briefing.json",      encoding="utf-8"))
     return docs, recs, briefing
 
-docs, recommendations, briefing = load_data()
+@st.cache_resource
+def load_retrieval():
+    client     = chromadb.PersistentClient(path="chroma_db")
+    collection = client.get_collection("lufthansa")
+    model      = SentenceTransformer("all-MiniLM-L6-v2")
+    texts      = [d["text"] for d in json.load(open("lufthansa_labeled.json", encoding="utf-8"))]
+    doc_emb    = model.encode(texts)
+    return collection, model, texts, doc_emb
+
+docs, recommendations, briefing   = load_data()
+collection, emb_model, texts, doc_emb = load_retrieval()
+
 last_update = datetime.fromtimestamp(
     os.path.getmtime("lufthansa_data.json")).strftime("%d %b %Y, %H:%M")
 
-# small look-up tables for coloured labels
-PRIORITY  = {"High": "🔴 High", "Medium": "🟠 Medium", "Low": "🟢 Low"}
-SENTIMENT = {"positive": "🟢 positive", "neutral": "⚪ neutral", "negative": "🔴 negative"}
+PRIORITY  = {"High":"🔴 High",      "Medium":"🟠 Medium", "Low":"🟢 Low"}
+SENTIMENT = {"positive":"🟢 Positive","neutral":"⚪ Neutral","negative":"🔴 Negative"}
 
 
-# ----------------------------------------------------------------------
-# Sidebar navigation (each radio choice = one "page")
-# ----------------------------------------------------------------------
-with st.sidebar:
-    st.title("🛫 AI CEO")
-    st.caption("Lufthansa · Strategic Intelligence")
-    page = st.radio(
-        "Navigate",
-        ["🏠 Overview", "📰 Market Intelligence", "🚀 Opportunities",
-         "⚠️ Risks", "📊 Sentiment", "🎯 Recommendations", "📋 CEO Briefing"],
+# ─────────────────────────────────────────────────────────────────────────────
+# CEO AGENT  (RAG pipeline — retrieve → prompt → generate → parse)
+# ─────────────────────────────────────────────────────────────────────────────
+def ceo_agent(question, k=5):
+    results   = collection.query(query_texts=[question], n_results=k)
+    retrieved = results["documents"][0]
+    metas     = results["metadatas"][0]
+    context   = "\n\n".join(f"[{m['source']}] {doc}" for doc, m in zip(retrieved, metas))
+
+    system_prompt = """You are a strategic advisor to the CEO of Lufthansa.
+Use ONLY the evidence provided — do not invent facts.
+Return a JSON object with EXACTLY these keys:
+- "recommendation": one clear strategic action (string)
+- "justification": 1-2 sentences explaining WHY this recommendation follows from the evidence
+- "supporting_evidence": list of 2-3 short evidence points from the context
+- "expected_impact": expected business impact (string)
+- "risk_level": one of "High", "Medium", "Low"
+- "priority": one of "High", "Medium", "Low"
+"""
+    response = ollama.chat(
+        model="llama3.1:8b",
+        messages=[
+            {"role": "system", "content": system_prompt},
+            {"role": "user",   "content": f"Evidence:\n{context}\n\nQuestion: {question}"},
+        ],
+        format="json"
     )
+    rec = json.loads(response["message"]["content"])
+    rec["question"] = question
+    rec["sources"]  = [m["url"] for m in metas]
+    return rec
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# CHAT SESSION STATE
+# ─────────────────────────────────────────────────────────────────────────────
+if "chat_history" not in st.session_state:
+    st.session_state.chat_history = []
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# SIDEBAR
+# ─────────────────────────────────────────────────────────────────────────────
+with st.sidebar:
+    if os.path.exists("lufthansa.png"):
+        st.image("lufthansa.png", use_container_width=True)
+    else:
+        st.title("🛫 AI CEO")
+    st.caption("Lufthansa · Strategic Intelligence Agent")
     st.divider()
-    st.metric("Documents", len(docs))
-    st.metric("Data sources", len(set(d["source"] for d in docs)))
-    st.caption(f"🕒 Updated {last_update}")
+    page = st.radio("Navigate", [
+        "🏠 Overview", "📰 Market Intelligence", "🚀 Opportunities",
+        "⚠️ Risks", "📈 Trends", "📊 Sentiment", "🎯 Recommendations",
+        "📋 CEO Briefing",
+    ])
+    st.divider()
+    st.metric("Documents",   len(docs))
+    st.metric("Sources",     len(set(d["source"] for d in docs)))
+    st.caption(f"🕒 {last_update}")
+    st.divider()
+    st.caption("")
 
 
-# ======================================================================
+# ─────────────────────────────────────────────────────────────────────────────
+# HELPER: page hero banner
+# ─────────────────────────────────────────────────────────────────────────────
+def hero(icon, title, subtitle, color="#05164D"):
+    st.markdown(f"""
+    <div style="background:linear-gradient(120deg,{color} 0%,#0a2570 100%);
+                padding:28px 32px; border-radius:16px; margin-bottom:24px;
+                border-left:6px solid #F9BA00; box-shadow:0 4px 20px rgba(5,22,77,.2)">
+        <h1 style="color:white;margin:0;font-size:2rem">{icon} {title}</h1>
+        <p  style="color:#b8c8ff;margin:6px 0 0">{subtitle}</p>
+    </div>
+    """, unsafe_allow_html=True)
+
+
+# nice human label for each raw source tag
+SOURCE_LABEL = {"news": "📰 News", "reddit": "💬 Reddit", "competitor": "🏢 Competitor",
+                "company": "✈️ Company"}
+
+# left-border accent colour per category (instant visual scanning)
+ACCENT = {"opportunity": "#2ecc71", "risk": "#e74c3c", "trend": "#3498db"}
+
+def doc_card(x, show_sentiment=True, show_source=True, accent=None):
+    """Render one document as a rich, full-text card with a coloured accent border.
+    Built as escaped HTML so it stays readable on any Streamlit theme."""
+    colour = accent or ACCENT.get(x.get("category"), "#05164D")
+    text   = html.escape(x["text"])                      # FULL text — no truncation
+    url    = html.escape(x["url"], quote=True)            # safe inside href='...'
+    meta   = []
+    if show_sentiment and x.get("sentiment"):
+        meta.append(SENTIMENT.get(x["sentiment"], x["sentiment"]))
+    if show_source:
+        meta.append(SOURCE_LABEL.get(x["source"], x["source"]))
+    meta_html = " &nbsp;·&nbsp; ".join(meta)
+    st.markdown(
+        f"<div style='border:1px solid rgba(128,140,180,.25); border-left:5px solid {colour};"
+        f"border-radius:10px; padding:14px 18px; margin-bottom:14px; background:rgba(128,140,180,.05)'>"
+        f"<div style='font-size:1.05rem; line-height:1.6'>{text}</div>"
+        f"<div style='margin-top:10px; font-size:.85rem; opacity:.8'>{meta_html}"
+        f"{' &nbsp;·&nbsp; ' if meta_html else ''}"
+        f"<a href='{url}' target='_blank' style='color:{colour}; text-decoration:none'>🔗 Open source</a>"
+        f"</div></div>",
+        unsafe_allow_html=True,
+    )
+
+
+def sentiment_filter(items, key):
+    """Radio filter by sentiment + live count. Returns the filtered list.
+    Used on Trends/Opportunities, where 'positive vs negative' is meaningful."""
+    choice = st.radio("Filter by sentiment",
+                      ["All", "🟢 Positive", "⚪ Neutral", "🔴 Negative"],
+                      horizontal=True, key=key)
+    smap = {"🟢 Positive": "positive", "⚪ Neutral": "neutral", "🔴 Negative": "negative"}
+    shown = items if choice == "All" else [d for d in items if d.get("sentiment") == smap[choice]]
+    st.caption(f"Showing **{len(shown)}** of {len(items)} documents")
+    return shown
+
+
+def source_filter(items, key):
+    """Radio filter by source ('where is this coming from?') + live count.
+    Used on the Risk page — 'positive risk' is nonsense, but 'where is the risk
+    coming from?' (news / competitor / community) is the useful question.
+    Only offers sources that actually appear in this list."""
+    present = [s for s in ["news", "competitor", "reddit", "company"]
+               if any(d.get("source") == s for d in items)]
+    labels  = ["All"] + [SOURCE_LABEL[s] for s in present]
+    choice  = st.radio("Filter by source", labels, horizontal=True, key=key)
+    if choice == "All":
+        shown = items
+    else:
+        rev   = {v: k for k, v in SOURCE_LABEL.items()}   # label → raw source tag
+        shown = [d for d in items if d.get("source") == rev[choice]]
+    st.caption(f"Showing **{len(shown)}** of {len(items)} documents")
+    return shown
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 # PAGE: Overview
-# ======================================================================
+# ─────────────────────────────────────────────────────────────────────────────
 if page == "🏠 Overview":
-    # Full-screen background image — ONLY on this page.
-    # Save your image as background.jpg in this folder (JPEG). Falls back to the banner.
-    import base64
+    # full-screen background if file present
     if os.path.exists("background.jpg"):
-        with open("background.jpg", "rb") as _f:
-            _b64 = base64.b64encode(_f.read()).decode()
-        st.markdown(f"""
-        <style>
-        .stApp {{
-            background-image: linear-gradient(rgba(2,16,58,0.55), rgba(2,16,58,0.72)),
-                              url("data:image/jpeg;base64,{_b64}");
-            background-size: cover;
-            background-position: center;
-            background-attachment: fixed;
-        }}
-        </style>
-        """, unsafe_allow_html=True)
-        st.markdown("<h1 style='color:white;margin-bottom:0'>🛫 AI CEO — Lufthansa</h1>",
+        with open("background.jpg", "rb") as f:
+            b64 = base64.b64encode(f.read()).decode()
+        st.markdown(f"""<style>.stApp{{
+            background-image:linear-gradient(rgba(2,16,58,.6),rgba(2,16,58,.75)),
+                             url("data:image/jpeg;base64,{b64}");
+            background-size:cover;background-position:center;background-attachment:fixed;
+        }}</style>""", unsafe_allow_html=True)
+        st.markdown("<h1 style='color:white;font-size:3rem;margin-bottom:0'>🛫 AI CEO — Lufthansa</h1>",
                     unsafe_allow_html=True)
-        st.markdown("<p style='color:#dfe6f5'>Executive Intelligence Dashboard · open-source · evidence-based</p>",
+        st.markdown("<p style='color:#b8c8ff;font-size:1.1rem'>Executive Intelligence Dashboard · open-source · evidence-based</p>",
                     unsafe_allow_html=True)
     else:
         if os.path.exists("lufthansa.png"):
             st.image("lufthansa.png", use_container_width=True)
-        st.title("🛫 AI CEO — Lufthansa")
+        st.markdown("<h1 style='color:#05164D;font-size:2.5rem'>🛫 AI CEO — Lufthansa</h1>",
+                    unsafe_allow_html=True)
         st.caption("Executive Intelligence Dashboard · open-source · evidence-based")
-    st.write("")
 
+    st.write("")
     col1, col2 = st.columns(2)
     with col1:
         with st.container(border=True):
             st.subheader("✈️ About Lufthansa")
             st.write(
-                "Deutsche Lufthansa AG is Germany's flagship carrier and one of Europe's "
-                "largest airline groups. With major hubs in **Frankfurt** and **Munich** and "
-                "as a founding member of the **Star Alliance**, the Lufthansa Group spans "
-                "passenger aviation, cargo (Lufthansa Cargo) and aircraft maintenance "
-                "(Lufthansa Technik) — operating one of the world's largest fleets."
+                "Deutsche Lufthansa AG is Germany's flagship carrier and one of Europe's largest "
+                "airline groups. With major hubs in **Frankfurt** and **Munich** and as a founding "
+                "member of the **Star Alliance**, the group spans passenger aviation, cargo "
+                "(Lufthansa Cargo) and MRO (Lufthansa Technik) — one of the world's largest fleets."
             )
     with col2:
         with st.container(border=True):
             st.subheader("💡 Why I chose Lufthansa")
             st.write(
-                "I love travelling — mostly by aeroplane. I'm fascinated by the **discipline "
-                "and planning** behind how an airline runs, especially how it manages its "
-                "aircraft and flight schedules. And one day, I'd love to see the cockpit."
+                "I love travelling — mostly by aeroplane. I'm fascinated by the **discipline and "
+                "planning** behind how an airline runs: managing thousands of flights, crew, and "
+                "aircraft schedules every day. And one day, I'd love to see the cockpit. ✈️"
             )
 
     st.write("")
-    with st.container(border=True):
-        a, b, c, d = st.columns(4)
-        a.metric("Company", "Lufthansa")
-        b.metric("Industry", "Aviation")
-        c.metric("Documents", len(docs))
-        d.metric("Data sources", len(set(x["source"] for x in docs)))
+    c1, c2, c3, c4 = st.columns(4)
+    c1.metric("Company",       "Lufthansa")
+    c2.metric("Industry",      "Aviation")
+    c3.metric("Documents",     len(docs))
+    c4.metric("Data sources",  len(set(x["source"] for x in docs)))
+
+    st.write("")
+    o1, o2, o3 = st.columns(3)
+    o1.metric("🚀 Opportunities", sum(d["category"] == "opportunity" for d in docs))
+    o2.metric("⚠️ Risks",         sum(d["category"] == "risk"        for d in docs))
+    o3.metric("📈 Trends",        sum(d["category"] == "trend"       for d in docs))
 
 
-# ======================================================================
+# ─────────────────────────────────────────────────────────────────────────────
 # PAGE: Market Intelligence
-# ======================================================================
+# ─────────────────────────────────────────────────────────────────────────────
 elif page == "📰 Market Intelligence":
-    st.title("📰 Market Intelligence")
-    tab_news, tab_comp = st.tabs(["Recent news", "Competitor activity"])
+    hero("📰", "Market Intelligence", "Full news, community, and competitor coverage")
+
+    news_docs    = [d for d in docs if d["source"] == "news"]
+    reddit_docs  = [d for d in docs if d["source"] == "reddit"]
+    comp_docs    = [d for d in docs if d["source"] == "competitor"]
+    company_docs = [d for d in docs if d["source"] == "company"]
+
+    tab_news, tab_reddit, tab_comp, tab_company = st.tabs([
+        f"📰 News ({len(news_docs)})",
+        f"💬 Reddit ({len(reddit_docs)})",
+        f"🏢 Competitors ({len(comp_docs)})",
+        f"✈️ Company ({len(company_docs)})",
+    ])
 
     with tab_news:
-        for x in [d for d in docs if d["source"] == "news"][:8]:
-            with st.container(border=True):
-                st.write(x["text"][:220] + "…")
-                st.caption(f"{SENTIMENT.get(x['sentiment'], x['sentiment'])} · [source]({x['url']})")
+        if news_docs:
+            for x in news_docs:
+                doc_card(x, show_source=False)
+        else:
+            st.info("No news documents in the current corpus.")
+
+    with tab_reddit:
+        if reddit_docs:
+            for x in reddit_docs:
+                doc_card(x, show_source=False)
+        else:
+            st.info("No Reddit documents in the current corpus.")
 
     with tab_comp:
-        for x in [d for d in docs if d["source"] == "competitor"][:8]:
-            with st.container(border=True):
-                st.write(x["text"][:220] + "…")
-                st.caption(f"[source]({x['url']})")
+        if comp_docs:
+            for x in comp_docs:
+                doc_card(x, show_sentiment=False, show_source=False)
+        else:
+            st.info("No competitor documents in the current corpus.")
+
+    with tab_company:
+        if company_docs:
+            for x in company_docs:
+                doc_card(x, show_source=False)
+        else:
+            st.info("No company documents in the current corpus.")
 
 
-# ======================================================================
+# ─────────────────────────────────────────────────────────────────────────────
 # PAGE: Opportunities
-# ======================================================================
+# ─────────────────────────────────────────────────────────────────────────────
 elif page == "🚀 Opportunities":
-    st.title("🚀 Opportunity Monitor")
     opps = [d for d in docs if d["category"] == "opportunity"]
-    st.caption(f"{len(opps)} documents classified as opportunities")
-    for x in opps:
-        with st.container(border=True):
-            st.write(x["text"])
-            st.caption(f"{SENTIMENT.get(x['sentiment'], x['sentiment'])} · source: {x['source']} · [evidence]({x['url']})")
+    hero("🚀", "Opportunity Monitor", f"{len(opps)} documents classified as opportunities", "#0a5c2e")
+    for x in sentiment_filter(opps, key="opp_filter"):
+        doc_card(x)
 
 
-# ======================================================================
+# ─────────────────────────────────────────────────────────────────────────────
 # PAGE: Risks
-# ======================================================================
+# ─────────────────────────────────────────────────────────────────────────────
 elif page == "⚠️ Risks":
-    st.title("⚠️ Risk Monitor")
     risks = [d for d in docs if d["category"] == "risk"]
-    st.caption(f"{len(risks)} documents classified as risks")
-    for x in risks[:40]:
-        with st.container(border=True):
-            st.write(x["text"])
-            st.caption(f"{SENTIMENT.get(x['sentiment'], x['sentiment'])} · source: {x['source']} · [evidence]({x['url']})")
+    hero("⚠️", "Risk Monitor", f"{len(risks)} documents classified as risks", "#7a1c1c")
+    for x in source_filter(risks, key="risk_filter"):
+        doc_card(x)
 
 
-# ======================================================================
+# ─────────────────────────────────────────────────────────────────────────────
+# PAGE: Trends
+# ─────────────────────────────────────────────────────────────────────────────
+elif page == "📈 Trends":
+    trends = [d for d in docs if d["category"] == "trend"]
+    hero("📈", "Trend Monitor",
+         f"{len(trends)} documents — technologies & market shifts to watch", "#1d4e7a")
+    for x in sentiment_filter(trends, key="trend_filter"):
+        doc_card(x)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 # PAGE: Sentiment
-# ======================================================================
+# ─────────────────────────────────────────────────────────────────────────────
 elif page == "📊 Sentiment":
-    st.title("📊 Sentiment Analysis")
+    hero("📊", "Sentiment Analysis", "How the market feels about Lufthansa")
     col1, col2 = st.columns(2)
 
     with col1:
-        st.subheader("Overall")
-        order  = ["negative", "neutral", "positive"]
-        counts = Counter(d["sentiment"] for d in docs)
-        vals   = [counts.get(k, 0) for k in order]
-        fig, ax = plt.subplots(figsize=(4, 4))
-        ax.pie(vals, labels=order, autopct="%1.0f%%",
-               colors=["#e74c3c", "#bdc3c7", "#2ecc71"])
-        ax.axis("equal")
-        st.pyplot(fig)
+        with st.container(border=True):
+            st.subheader("Overall sentiment")
+            order  = ["Negative", "Neutral", "Positive"]
+            counts = Counter(d["sentiment"] for d in docs)
+            vals   = [counts.get(k.lower(), 0) for k in order]
+            fig, ax = plt.subplots(figsize=(4, 4))
+            fig.patch.set_facecolor("#05164D")        # navy panel = readable on any theme
+            ax.set_facecolor("#05164D")
+            wedges, labels_t, autop = ax.pie(
+                vals, labels=order, autopct="%1.0f%%",
+                colors=["#e74c3c", "#95a5a6", "#2ecc71"],
+                startangle=140, wedgeprops={"edgecolor": "#05164D", "linewidth": 2},
+                textprops={"color": "white", "fontsize": 11})
+            for a in autop:                            # percentage text
+                a.set_color("white"); a.set_fontweight("bold")
+            ax.axis("equal")
+            st.pyplot(fig)
 
     with col2:
-        st.subheader("By source (news vs public vs company)")
-        df = pd.DataFrame([{"source": d["source"], "sentiment": d["sentiment"]} for d in docs])
-        pivot = df.pivot_table(index="source", columns="sentiment", aggfunc=len, fill_value=0)
-        st.bar_chart(pivot)
-
-
-# ======================================================================
-# PAGE: Recommendations
-# ======================================================================
-elif page == "🎯 Recommendations":
-    st.title("🎯 Strategic Recommendations")
-    for rec in recommendations:
         with st.container(border=True):
-            st.markdown(f"### {rec['recommendation']}")
+            st.subheader("Sentiment by source")
+            df    = pd.DataFrame([{"source": d["source"], "sentiment": d["sentiment"]} for d in docs])
+            pivot = df.pivot_table(index="source", columns="sentiment", aggfunc=len, fill_value=0)
+            st.bar_chart(pivot)
+
+    st.write("")
+    with st.container(border=True):
+        st.subheader("📋 Raw counts")
+        c1, c2, c3 = st.columns(3)
+        cnt = Counter(d["sentiment"] for d in docs)
+        c1.metric("🔴 Negative", cnt.get("negative", 0))
+        c2.metric("⚪ Neutral",  cnt.get("neutral",  0))
+        c3.metric("🟢 Positive", cnt.get("positive", 0))
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# PAGE: Recommendations
+# ─────────────────────────────────────────────────────────────────────────────
+elif page == "🎯 Recommendations":
+    hero("🎯", "Strategic Recommendations", "Evidence-based actions for Lufthansa leadership")
+    for i, rec in enumerate(recommendations, 1):
+        with st.container(border=True):
+            st.markdown(f"### {i}. {rec['recommendation']}")
             st.markdown(
-                f"{PRIORITY.get(rec.get('priority'), rec.get('priority'))} priority "
-                f"· **Risk:** {rec.get('risk_level', '—')}"
+                f"{PRIORITY.get(rec.get('priority'), rec.get('priority', '—'))} priority "
+                f"&nbsp;·&nbsp; **Risk level:** {rec.get('risk_level', '—')}"
             )
-            st.markdown(f"**Why it matters:** {rec.get('justification', '')}")
-            st.markdown(f"**Expected impact:** {rec.get('expected_impact', '')}")
-            with st.expander("📎 Evidence & sources"):
-                for e in rec.get("supporting_evidence", []):
-                    st.markdown(f"- {e}")
-                st.caption("Sources:")
+            st.markdown(f"**💡 Why this recommendation**\n\n{rec.get('justification', '')}")
+            st.markdown(f"**📈 Expected impact**\n\n{rec.get('expected_impact', '')}")
+
+            st.markdown("**📎 Supporting evidence**")
+            for e in rec.get("supporting_evidence", []):
+                st.markdown(f"- {e}")
+
+            with st.expander("🔗 Sources"):
                 for u in rec.get("sources", []):
                     st.markdown(f"- {u}")
+        st.write("")
 
 
-# ======================================================================
+# ─────────────────────────────────────────────────────────────────────────────
 # PAGE: CEO Briefing
-# ======================================================================
+# ─────────────────────────────────────────────────────────────────────────────
 elif page == "📋 CEO Briefing":
-    st.title("📋 CEO Briefing")
-    st.caption("One-page executive summary")
-
+    hero("📋", "CEO Briefing", "One-page executive summary for leadership")
     with st.container(border=True):
         st.subheader("📌 What happened?")
         st.write(briefing.get("what_happened", ""))
+    st.write("")
     with st.container(border=True):
         st.subheader("💡 Why does it matter?")
         st.write(briefing.get("why_it_matters", ""))
+    st.write("")
     with st.container(border=True):
         st.subheader("✅ What should management do next?")
         st.write(briefing.get("what_to_do_next", ""))
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# FLOATING CHAT WIDGET  — round 💬 button bottom-right; click to open the panel
+# (CSS above pins st.popover to the corner and makes the trigger a circle)
+# ─────────────────────────────────────────────────────────────────────────────
+with st.popover("💬", use_container_width=False):
+    # ── header (like "Hello I'm AI.g") ──
+    st.markdown(
+        "<div style='background:linear-gradient(120deg,#05164D,#0a2570);"
+        "margin:-1rem -1rem 0.5rem -1rem;padding:18px 20px;border-radius:12px 12px 0 0'>"
+        "<h3 style='color:white;margin:0'>🛫 Hello, I'm the AI CEO</h3>"
+        "<p style='color:#b8c8ff;margin:4px 0 0;font-size:.85rem'>"
+        "Ask me anything about Lufthansa's strategy</p></div>",
+        unsafe_allow_html=True,
+    )
+
+    # ── conversation history ──
+    if not st.session_state.chat_history:
+        st.caption("👋 Try: *\"What are Lufthansa's biggest risks right now?\"*")
+    for turn in st.session_state.chat_history:
+        with st.chat_message("user"):
+            st.write(turn["question"])
+        with st.chat_message("assistant", avatar="🛫"):
+            st.markdown(f"**{turn['recommendation']}**")
+            st.caption(f"{PRIORITY.get(turn.get('priority'), '—')} · Risk: {turn.get('risk_level','—')}")
+            st.write(turn.get("justification", ""))
+            with st.expander("📎 Evidence & sources"):
+                for e in turn.get("supporting_evidence", []):
+                    st.markdown(f"- {e}")
+                for u in turn.get("sources", []):
+                    st.caption(u)
+
+    # ── input box (form = stays open + clears after sending) ──
+    with st.form("chat_form", clear_on_submit=True):
+        question = st.text_input(
+            "Your question",
+            placeholder="Type your question here…",
+            label_visibility="collapsed",
+        )
+        sent = st.form_submit_button("Ask  ➤", use_container_width=True)
+
+    if sent and question:
+        with st.spinner("Retrieving evidence and reasoning… (~2 min on CPU)"):
+            rec = ceo_agent(question)
+        st.session_state.chat_history.append(rec)
+        st.rerun()
