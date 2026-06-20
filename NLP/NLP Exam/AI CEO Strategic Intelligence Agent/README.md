@@ -249,6 +249,23 @@ would produce nonsense like "positive risks." The Risk page therefore filters by
 this risk coming from?* — news / competitor / community), while **Trends** and **Opportunities** filter
 by **sentiment** (a "positive vs negative trend" is a genuine, useful distinction).
 
+**17. The agent uses semantic retrieval — chosen by evaluation, not assumption.** Hybrid search is
+built and tested, but the agent calls `collection.query` (semantic). This was verified, not assumed:
+- *Overlap:* semantic vs hybrid share only ~1–2 of 5 top documents, semantic vs BM25 just 0.4/5 — the
+  methods retrieve different evidence.
+- *Relevance:* scoring each retriever's top-5 against the Task-4 category labels gave semantic 6, hybrid
+  7, BM25 5 (of 20) — **comparable, no clear winner**, and which wins is question-dependent.
+- *End-to-end:* running the full agent on the same question with semantic vs hybrid produced **essentially
+  the same recommendation** (same action, same risk level, same cited evidence) — the LLM extracts the
+  dominant theme from any reasonable top-5, so the upstream difference washes out.
+
+Since the **output is the same**, the choice comes down to **cost**: semantic is a single ChromaDB call
+with no extra keyword index and no `alpha` to justify, whereas hybrid adds moving parts for an identical
+result. So the agent uses semantic, and hybrid is kept as **insurance** — for keyword-heavy data
+(full articles, exact model numbers) BM25's literal matching would matter, and switching it in is a
+one-line change. Short DDGS *snippets* (few keywords) also favour semantic. *(Fully adaptive **query
+routing** — pick the retriever per question type — is noted as future work.)*
+
 ---
 
 ## Project Structure

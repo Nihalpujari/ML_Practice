@@ -221,12 +221,40 @@ DASHBOARD  (DONE + UI LOCKED)   [file: app.py, Streamlit]
 
 -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
+20-21/06/2026
+
+PROF FEEDBACK (Mobasher) + ENVIRONMENT FIX + RETRIEVAL EVALUATION
+
+PROF FEEDBACK (assistant examiner Mobasher; MAIN module leader = Prof SWATI -> follow task instructions + get HER final feedback):
+- Label the diagram ARROWS, especially those into Task 3 (processing) & Task 4 (intelligence) -> DONE (README mermaid arrows labelled).
+- Be ready to EXPLAIN the whole architecture orally + JUSTIFY every design choice ("even if you used AI tools, you must understand everything").
+- He asked: "for hybrid, what is the criteria of the MAJORITY VOTING of such ensemble methods?" -> answer: my hybrid is NOT majority voting (that's a CLASSIFICATION strategy - discrete votes). It's WEIGHTED SCORE FUSION: min-max normalise BM25 + cosine to 0-1, weighted sum (alpha), take top-k. RRF = the rank-voting alternative.
+- "No limit on question types" but "it is not a master thesis defence" -> focus = understand the model + justify decisions, not exotic depth.
+
+ENVIRONMENT / HOW TO RUN THE DASHBOARD (fixed):
+- The full ML stack (chromadb 1.5.9, sentence-transformers, ollama, sklearn, ...) lives in PYTHON 3.11 (C:\Users\hp\AppData\Local\Programs\Python\Python311). chroma_db was BUILT by this chromadb.
+- PATH `streamlit`/`jupyter` point to Python 3.12, which has streamlit but NO chromadb -> `streamlit run app.py` failed with ModuleNotFoundError: chromadb.
+- FIX: installed streamlit==1.37.0 into 3.11. ALWAYS launch with explicit 3.11:
+    & "C:\Users\hp\AppData\Local\Programs\Python\Python311\python.exe" -m streamlit run app.py     (NOT plain `streamlit run app.py`)
+
+RETRIEVAL EVALUATION - semantic vs hybrid vs BM25 (answers "why semantic and not hybrid?"):
+- Tested THREE ways on the 5 CEO questions (semantic = collection.query; hybrid = BM25+cosine fused; BM25 = keyword only):
+  (1) OVERLAP of top-5 docs: semantic∩hybrid ~1.4/5 (alpha=0.5), 2.4/5 (alpha=0.7); semantic∩BM25 only 0.4/5 -> they retrieve DIFFERENT evidence.
+  (2) ALPHA SWEEP: overlap-with-semantic rose monotonically 0.4 -> 5.0 as alpha 0->1 (alpha = the dial between BM25 and semantic). BM25 "punches above its weight" (alpha=0.7 still only 2.4/5; need ~0.9) because min-max norm makes BM25 spiky vs cosine bunched.
+  (3) RELEVANCE by Task-4 label (does the top-5 doc's category/source match the question intent): semantic 6, hybrid 7, BM25 5 of 20 -> COMPARABLE, no clear winner, question-dependent (BM25 best on risks; sem/hyb best on trends; competitors 0/0/0 = proxy artifact).
+  (4) END-TO-END (the decider): ran the FULL LLM agent on "biggest risks" with semantic vs hybrid retrieval -> SAME recommendation (cost management + pricing strategy, High risk, both cite the 37% profit drop). Output CONVERGES even though the docs differ, because the corpus's dominant theme (cost/competition pressure) sits in any reasonable top-5.
+- CONCLUSION: output is the same -> quality is a TIE -> decide on COST. Semantic = ONE ChromaDB call, no extra keyword index, no alpha to justify; hybrid adds complexity for an IDENTICAL result. So the AGENT USES SEMANTIC; hybrid kept as INSURANCE (if data becomes keyword-heavy / full articles -> raise alpha or wire it in, a 1-line swap). Short DDGS snippets also favour semantic. Fully adaptive QUERY ROUTING = future work.
+- Documented as README Design Decision #17. Full oral answers saved in exam-questions Q72-Q74.
+- LESSON: MEASURE, don't assume. My earlier "semantic is clearly better" was OVERSTATED - the objective test showed them comparable -> present the honest nuance (examiners reward self-correction over false confidence).
+
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 =================== NEXT STEPS ===================
-- Dashboard DONE + UI LOCKED (19/06). 8 pages, magazine look, live chat. Runs: streamlit run app.py (needs Ollama for chat).
+- Dashboard DONE + UI LOCKED (19/06). README updated incl. Design Decision #17. Launch via Python 3.11 (see ENVIRONMENT FIX above), needs Ollama for the live chat.
+- Option B (wire hybrid into the agent): RESOLVED - evaluated 3 ways, semantic chosen by COST since output converges; hybrid kept as insurance. NOT wiring it in.
+- BREADTH ORAL REHEARSAL (highest priority; deadline 22/06): retrieval is now bulletproof; STILL TO DRILL -> Task 4 (3-class sentiment + zero-shot NLI), ChromaDB choice, cleaning philosophy ("remove noise not meaning"), format=json (validity vs schema), full RAG flow.
+- SUBMIT EARLY 22/06 (do NOT leave it to 23:58).
 - Dashboard bonus (optional): Version 2 = semantic vs hybrid comparison panel.
-- README polish (flip dashboard to DONE).
-- ORAL REHEARSAL (66 saved questions) = highest priority, 50% of grade.
-- (optional) Option B: wire hybrid_search() into ceo_agent so the agent uses hybrid (not just semantic).
 
 DATA FILES (artifacts the dashboard reads) — all now consistent at 195:
   lufthansa_data.json (195, clean, Task1) -> chroma_db/ + BM25 (Task2) -> lufthansa_labeled.json (195, Task4) ->
