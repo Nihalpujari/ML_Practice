@@ -12,3 +12,6 @@ venv/
 env/
 __pycache__/
 *.pyc
+
+# presentation — keep local, don't push to GitHub
+*.pptx
