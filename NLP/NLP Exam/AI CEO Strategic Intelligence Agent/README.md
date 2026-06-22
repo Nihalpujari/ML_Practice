@@ -90,29 +90,29 @@ flowchart TD
         CO[Company official site]
     end
 
-    SOURCES -->|DDGS web search| COLLECT[Task 1: Collector<br/>clean + de-duplicate by URL & text]
+    SOURCES -->|DDGS web search| COLLECT[Task 1: Collector<br/>clean + de-duplicate<br/>by URL & text]
     COLLECT -->|text + url + source| JSON[(lufthansa_data.json<br/>185 clean docs)]
 
-    JSON -->|clean text to embed| PROC[Task 2 + 3: process & embed<br/>all-MiniLM-L6-v2]
-    PROC -->|384-dim vectors + metadata| CHROMA[(ChromaDB<br/>vectors + text + metadata)]
+    JSON -->|clean text to embed| PROC[Task 2 + 3:<br/>process & embed<br/>all-MiniLM-L6-v2]
+    PROC -->|384-dim vectors| CHROMA[(ChromaDB<br/>vectors + text<br/>+ metadata)]
     PROC -->|word tokens| BM25[(BM25 keyword index)]
-    PROC -. document embeddings .-> COS[cosine similarity<br/>on embeddings]
+    PROC -. embeddings .-> COS[cosine similarity<br/>on embeddings]
 
-    JSON -->|raw text to classify| INTEL[Task 4: Intelligence Engine<br/>zero-shot category + confidence<br/>+ 3-class sentiment + risk severity]
-    INTEL -->|+ category, confidence, sentiment, severity| LABELED[(lufthansa_labeled.json)]
+    JSON -->|raw text to classify| INTEL[Task 4: Intelligence Engine<br/>zero-shot category<br/>+ confidence<br/>3-class sentiment<br/>+ risk severity]
+    INTEL -->|adds label fields| LABELED[(lufthansa_labeled.json)]
     AGENT -. rates opportunity impact .-> LABELED
 
     CHROMA -->|collection.query| SEM[Semantic retrieval]
-    BM25 -->|keyword score| HYB[Hybrid retrieval<br/>normalize + 50/50 weighted score fusion]
+    BM25 -->|keyword score| HYB[Hybrid retrieval<br/>normalize +<br/>50/50 score fusion]
     COS -->|dense score| HYB
 
     SEM -->|top-k evidence| AGENT[Task 5: AI CEO Agent<br/>Ollama llama3.1:8b]
-    HYB -. built &amp; tested, not yet wired .-> AGENT
-    AGENT -->|structured JSON| RECS[(recommendations.json<br/>Task 6: recommendation + justification + supporting evidence<br/>+ expected impact + risk level + priority)]
+    HYB -. built, not yet wired .-> AGENT
+    AGENT -->|structured JSON| RECS[(recommendations.json<br/>Task 6 fields:<br/>recommendation<br/>justification<br/>supporting evidence<br/>expected impact<br/>risk level<br/>priority)]
     RECS -->|synthesise| BRIEF[Section 7: CEO Briefing]
     BRIEF -->|summary| CB[(ceo_briefing.json)]
 
-    LABELED -->|load| DASH[Executive Dashboard<br/>Streamlit · 8 pages + live chat]
+    LABELED -->|load| DASH[Executive Dashboard<br/>Streamlit · 8 pages<br/>+ live chat]
     RECS -->|load| DASH
     CB -->|load| DASH
 ```
@@ -129,7 +129,7 @@ flowchart LR
     SEM --> CTX[build context<br/>docs tagged with source]
     CTX --> PROMPT[prompt: system + user<br/>format=json]
     PROMPT --> LLM[Ollama llama3.1:8b<br/>reason]
-    LLM --> OUT[structured recommendation<br/>recommendation + justification + supporting evidence<br/>+ expected impact + risk level + priority]
+    LLM --> OUT[structured recommendation<br/>recommendation<br/>justification<br/>supporting evidence<br/>expected impact<br/>risk level<br/>priority]
     OUT --> BRIEF[CEO briefing synthesis]
     OUT --> UI[dashboard]
     BRIEF --> UI
