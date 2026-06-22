@@ -1,0 +1,27 @@
+# AI CEO: Strategic Intelligence Agent — Lufthansa
+# Python dependencies (versions pinned from the project's ml_env). Python 3.11+.
+# Install:  pip install -r requirements.txt
+# The reasoning LLM also needs Ollama installed separately (https://ollama.com) + `ollama pull llama3.1:8b`.
+
+# --- Task 1: live data collection ---
+ddgs==9.14.4                  # DuckDuckGo search
+
+# --- Task 2/3: knowledge base, embeddings + retrieval ---
+chromadb==1.5.9               # vector store (text + embeddings + metadata)
+sentence-transformers==5.5.1  # all-MiniLM-L6-v2 embeddings
+rank-bm25==0.2.2              # BM25 keyword index (hybrid search)
+scikit-learn==1.9.0           # cosine_similarity, PCA
+
+# --- Task 4: strategic intelligence engine ---
+transformers==4.41.2          # zero-shot (bart-large-mnli) + 3-class sentiment (roberta)
+torch==2.5.1                  # backend for transformers / sentence-transformers
+                              #   GPU users: install the matching CUDA build (e.g. torch==2.5.1+cu121) from pytorch.org
+
+# --- Task 5/6: reasoning LLM ---
+ollama==0.6.2                 # Python client for the local Ollama server (llama3.1:8b)
+
+# --- Dashboard + utilities ---
+streamlit==1.58.0             # executive dashboard (app.py)
+matplotlib==3.10.9            # charts
+numpy==1.26.4
+pandas==3.0.3
