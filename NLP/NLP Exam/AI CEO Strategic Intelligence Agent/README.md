@@ -44,7 +44,7 @@ evidence-based recommendations** — presented in an interactive dashboard.
 ## Features
 
 - **Automatic live data collection** from multiple independent public sources
-- **≥ 100 documents** collected, cleaned, de-duplicated, and stored (**195** after cleaning)
+- **≥ 100 documents** collected, cleaned, de-duplicated, and stored (**185** after cleaning)
 - **Vector knowledge base** with semantic search (ChromaDB)
 - **Hybrid retrieval** combining keyword (BM25) and semantic (embeddings) search
 - **Zero-shot classification** of each document into Opportunity / Risk / Trend
@@ -90,13 +90,13 @@ flowchart TD
         CO[Company official site]
     end
 
-    SOURCES -->|DDGS web search| COLLECT[Task 1: Collector<br/>clean + dedup by URL & text]
+    SOURCES -->|DDGS web search| COLLECT[Task 1: Collector<br/>clean + de-duplicate by URL & text]
     COLLECT -->|text + url + source| JSON[(lufthansa_data.json<br/>185 clean docs)]
 
     JSON -->|clean text to embed| PROC[Task 2 + 3: process & embed<br/>all-MiniLM-L6-v2]
     PROC -->|384-dim vectors + metadata| CHROMA[(ChromaDB<br/>vectors + text + metadata)]
     PROC -->|word tokens| BM25[(BM25 keyword index)]
-    PROC -. doc_emb .-> COS[cosine_similarity<br/>on embeddings]
+    PROC -. document embeddings .-> COS[cosine similarity<br/>on embeddings]
 
     JSON -->|raw text to classify| INTEL[Task 4: Intelligence Engine<br/>zero-shot category + confidence<br/>+ 3-class sentiment + risk severity]
     INTEL -->|+ category, confidence, sentiment, severity| LABELED[(lufthansa_labeled.json)]
@@ -108,7 +108,7 @@ flowchart TD
 
     SEM -->|top-k evidence| AGENT[Task 5: AI CEO Agent<br/>Ollama llama3.1:8b]
     HYB -. built &amp; tested, not yet wired .-> AGENT
-    AGENT -->|structured JSON| RECS[(recommendations.json<br/>Task 6: rec + justification + evidence + impact + risk + priority)]
+    AGENT -->|structured JSON| RECS[(recommendations.json<br/>Task 6: recommendation + justification + supporting evidence<br/>+ expected impact + risk level + priority)]
     RECS -->|synthesise| BRIEF[Section 7: CEO Briefing]
     BRIEF -->|summary| CB[(ceo_briefing.json)]
 
@@ -117,7 +117,7 @@ flowchart TD
     CB -->|load| DASH
 ```
 
-> **Accuracy notes (matches the code):** Cleaning happens **once at collection** (Task 1), so `lufthansa_data.json` is already clean (185 docs) and every downstream stage reads clean data. **Task 4** now saves, per document: `category` + its zero-shot **confidence** (`category_score`), 3-class **sentiment**, and a zero-shot **severity** for risks; the LLM additionally rates each opportunity's **impact** (High/Med/Low). Retrieval has **two paths** — *semantic* via `collection.query` (used by the agent **and** the live chat) and *hybrid* = BM25 + cosine-on-embeddings (built & tested standalone, not yet wired into the agent). The agent currently uses **semantic** retrieval.
+> **Accuracy notes (matches the code):** Cleaning happens **once at collection** (Task 1), so `lufthansa_data.json` is already clean (185 docs) and every downstream stage reads clean data. **Task 4** now saves, per document: `category` + its zero-shot **confidence** (`category_score`), 3-class **sentiment**, and a zero-shot **severity** for risks; the LLM additionally rates each opportunity's **impact** (High / Medium / Low). Retrieval has **two paths** — *semantic* via `collection.query` (used by the agent **and** the live chat) and *hybrid* = BM25 + cosine-on-embeddings (built & tested standalone, not yet wired into the agent). The agent currently uses **semantic** retrieval.
 
 ---
 
@@ -129,7 +129,7 @@ flowchart LR
     SEM --> CTX[build context<br/>docs tagged with source]
     CTX --> PROMPT[prompt: system + user<br/>format=json]
     PROMPT --> LLM[Ollama llama3.1:8b<br/>reason]
-    LLM --> OUT[structured recommendation<br/>rec + justification + evidence + impact + risk + priority]
+    LLM --> OUT[structured recommendation<br/>recommendation + justification + supporting evidence<br/>+ expected impact + risk level + priority]
     OUT --> BRIEF[CEO briefing synthesis]
     OUT --> UI[dashboard]
     BRIEF --> UI
@@ -223,9 +223,9 @@ positive/negative and was trained on movie reviews, so it forced neutral, factua
 listings) into positive/negative with misleadingly high confidence. Switched to
 `cardiffnlp/twitter-roberta-base-sentiment-latest` (negative/neutral/positive, trained on social
 text) so neutral documents are correctly labeled neutral — confirmed by the result distribution
-(neutral 109, positive 66, negative 20).
+(neutral 111, positive 54, negative 20).
 
-**12. Small models for labeling, LLM for reasoning.** Classification/sentiment over ~195 docs needs
+**12. Small models for labeling, LLM for reasoning.** Classification/sentiment over ~185 docs needs
 speed, not reasoning — small specialized models are ideal. The 8B LLM is reserved for Task 5, where
 the system must read evidence, reason, and *write* justified recommendations — something classifiers
 cannot do.
@@ -280,7 +280,7 @@ AI CEO Strategic Intelligence Agent/
 ├── Strategic Intelligence Engine.ipynb# Task 4 — classification + sentiment
 ├── CEO Agent.ipynb                    # Task 5/6 + Section 7 — RAG reasoning + recommendations
 ├── chroma_db/                         # persistent vector store (Task 2)
-├── lufthansa_data.json                # 195 clean, deduped documents (Task 1 output)
+├── lufthansa_data.json                # 185 clean, deduped documents (Task 1 output)
 ├── lufthansa_labeled.json             # same docs + category + sentiment (Task 4 output)
 ├── recommendations.json               # 5 pre-generated CEO recommendations (Task 5/6)
 ├── ceo_briefing.json                  # executive summary (Section 7)
@@ -309,7 +309,7 @@ ollama pull llama3.1:8b
 ## How to Run
 
 ```bash
-# Task 1 — collect data            → produces lufthansa_data.json (195 clean docs)
+# Task 1 — collect data            → produces lufthansa_data.json (185 clean docs)
 #   run: Data Collection.ipynb
 
 # Task 2/3 — build knowledge base  → produces chroma_db/ + retrieval functions
