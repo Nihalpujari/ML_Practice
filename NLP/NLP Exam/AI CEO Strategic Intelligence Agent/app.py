@@ -147,6 +147,16 @@ PRIORITY  = {"High":"🔴 High",      "Medium":"🟠 Medium", "Low":"🟢 Low"}
 SENTIMENT = {"positive":"🟢 Positive","neutral":"⚪ Neutral","negative":"🔴 Negative"}
 
 
+def _txt(v):
+    """Flatten any JSON value (str / dict / list) to readable text.
+    The LLM sometimes returns nested objects instead of plain strings — this keeps the UI from crashing."""
+    if isinstance(v, dict):
+        return " — ".join(_txt(x) for x in v.values())
+    if isinstance(v, list):
+        return "; ".join(_txt(x) for x in v)
+    return str(v)
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 # CEO AGENT  (RAG pipeline — retrieve → prompt → generate → parse)
 # ─────────────────────────────────────────────────────────────────────────────
@@ -237,7 +247,7 @@ def hero(icon, title, subtitle, color="#05164D"):
            border-bottom:2px solid #F9BA00;padding-bottom:10px;margin-bottom:16px">
         <span style="color:#F9BA00;font-weight:700;letter-spacing:3px;font-size:.72rem;text-transform:uppercase">
           Strategic Intelligence Briefing</span>
-        <span style="color:#9fb0d6;letter-spacing:2px;font-size:.72rem">VOL. 1 · JUNE 2026</span>
+        <span style="color:#9fb0d6;letter-spacing:2px;font-size:.72rem"></span>
       </div>
       <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
         <span style="font-size:2.4rem;line-height:1">{icon}</span>
@@ -277,6 +287,66 @@ def doc_card(x, show_sentiment=True, show_source=True, accent=None):
         f"</div></div>",
         unsafe_allow_html=True,
     )
+
+
+def category_legend():
+    """Small legend explaining the doc-card left-border colour = category."""
+    dot = "display:inline-block;width:11px;height:11px;border-radius:2px;margin-right:5px;vertical-align:middle"
+    st.markdown(
+        "<div style='display:flex;gap:18px;flex-wrap:wrap;align-items:center;"
+        "margin:-4px 0 14px;font-size:.85rem;color:#9aa6c4'>"
+        "<span style='font-weight:600'>Card border = category</span>"
+        f"<span><span style='{dot};background:#2ecc71'></span>Opportunity</span>"
+        f"<span><span style='{dot};background:#e74c3c'></span>Risk</span>"
+        f"<span><span style='{dot};background:#3498db'></span>Trend</span>"
+        "</div>", unsafe_allow_html=True)
+
+
+def opportunity_card(x):
+    """Opportunity Monitor card — title · impact · evidence · confidence (brief Section 3).
+    impact = LLM-rated (saved in the notebook); category_score = zero-shot confidence (Task 4)."""
+    text   = x["text"]
+    title  = text.split(". ", 1)[0]
+    body   = text[len(title):].lstrip(". ").strip() or "—"
+    impact = x.get("impact", "—")
+    conf   = x.get("category_score")
+    conf_s = f"{round(conf*100)}%" if isinstance(conf, (int, float)) else "—"
+    icol   = {"High": "#2ecc71", "Medium": "#e6a700", "Low": "#8a93a8"}.get(impact, "#8a93a8")
+    st.markdown(
+        "<div style='border:1px solid rgba(128,140,180,.25);border-left:5px solid #2ecc71;"
+        "border-radius:10px;padding:16px 18px;margin-bottom:14px;background:rgba(128,140,180,.05)'>"
+        f"<div style='font-size:1.12rem;font-weight:700;line-height:1.35'>{html.escape(title)}</div>"
+        "<div style='margin:9px 0;font-size:.86rem'>"
+        f"<span style='background:{icol};color:#fff;padding:2px 11px;border-radius:11px;font-weight:600'>Impact: {impact}</span>"
+        f"&nbsp;&nbsp;<span style='color:#7f8db0'>Confidence: <b>{conf_s}</b></span></div>"
+        f"<div style='font-size:1.0rem;line-height:1.55;opacity:.92'>{html.escape(body)}</div>"
+        "<div style='margin-top:9px;font-size:.85rem'>"
+        f"<a href='{html.escape(x['url'], quote=True)}' target='_blank' style='color:#2ecc71;text-decoration:none'>🔗 Open source (evidence)</a>"
+        "</div></div>", unsafe_allow_html=True)
+
+
+def risk_card(x):
+    """Risk Monitor card — title · category · severity · evidence · confidence (brief Section 4).
+    severity = zero-shot rated (saved in the notebook); category_score = zero-shot confidence (Task 4)."""
+    text     = x["text"]
+    title    = text.split(". ", 1)[0]
+    body     = text[len(title):].lstrip(". ").strip() or "—"
+    severity = x.get("severity", "—")
+    conf     = x.get("category_score")
+    conf_s   = f"{round(conf*100)}%" if isinstance(conf, (int, float)) else "—"
+    scol     = {"High": "#e74c3c", "Medium": "#e6a700", "Low": "#8a93a8"}.get(severity, "#8a93a8")
+    st.markdown(
+        "<div style='border:1px solid rgba(128,140,180,.25);border-left:5px solid #e74c3c;"
+        "border-radius:10px;padding:16px 18px;margin-bottom:14px;background:rgba(128,140,180,.05)'>"
+        f"<div style='font-size:1.12rem;font-weight:700;line-height:1.35'>{html.escape(title)}</div>"
+        "<div style='margin:9px 0;font-size:.86rem'>"
+        "<span style='background:#e74c3c;color:#fff;padding:2px 11px;border-radius:11px;font-weight:600'>Category: Risk</span>"
+        f"&nbsp;&nbsp;<span style='background:{scol};color:#fff;padding:2px 11px;border-radius:11px;font-weight:600'>Severity: {severity}</span>"
+        f"&nbsp;&nbsp;<span style='color:#7f8db0'>Confidence: <b>{conf_s}</b></span></div>"
+        f"<div style='font-size:1.0rem;line-height:1.55;opacity:.92'>{html.escape(body)}</div>"
+        "<div style='margin-top:9px;font-size:.85rem'>"
+        f"<a href='{html.escape(x['url'], quote=True)}' target='_blank' style='color:#e74c3c;text-decoration:none'>🔗 Open source (evidence)</a>"
+        "</div></div>", unsafe_allow_html=True)
 
 
 def sentiment_filter(items, key):
@@ -355,7 +425,7 @@ if page == "🏠 Overview":
            border-bottom:2px solid #F9BA00;padding-bottom:10px">
         <span style="color:#F9BA00;font-weight:700;letter-spacing:3px;font-size:.78rem;text-transform:uppercase">
           Strategic Intelligence Briefing</span>
-        <span style="color:#dfe6f5;letter-spacing:2px;font-size:.78rem">VOL. 1 · JUNE 2026</span>
+        <span style="color:#dfe6f5;letter-spacing:2px;font-size:.78rem"></span>
       </div>
 
       <div>
@@ -372,10 +442,27 @@ if page == "🏠 Overview":
         {lines_html}
         <div style="margin-top:16px;border-top:1px solid rgba(255,255,255,.25);padding-top:12px;
              color:#cbd6f0;letter-spacing:2px;font-size:.76rem;text-transform:uppercase">
-          {len(docs)} documents · {n_src} sources · Llama 3.1 8B · 100% open-source</div>
+          </div>
       </div>
     </div>
     """, unsafe_allow_html=True)
+
+    # ── company facts (the brief's required Overview fields) ──
+    last_update = datetime.fromtimestamp(os.path.getmtime("lufthansa_data.json")).strftime("%d %b %Y, %H:%M")
+    facts = [
+        ("Company", "Lufthansa"), ("Industry", "Aviation"),
+        ("Documents", str(len(docs))), ("Data sources", str(n_src)),
+        ("Last updated", last_update),
+    ]
+    facts_html = "".join(
+        "<div style='flex:1;min-width:150px;background:rgba(13,27,62,.55);border:1px solid rgba(255,255,255,.14);"
+        "border-left:5px solid #F9BA00;border-radius:12px;padding:14px 18px'>"
+        f"<div style='color:#F9BA00;font-size:.72rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase'>{lbl}</div>"
+        f"<div style='color:#fff;font-size:1.25rem;font-weight:800;margin-top:4px'>{val}</div></div>"
+        for lbl, val in facts
+    )
+    st.markdown(f"<div style='display:flex;gap:14px;flex-wrap:wrap;margin-top:22px'>{facts_html}</div>",
+                unsafe_allow_html=True)
 
     # ── FROM THE EDITOR (About + Why, editorial style) ──
     st.markdown("""
@@ -411,18 +498,22 @@ if page == "🏠 Overview":
 # PAGE: Market Intelligence
 # ─────────────────────────────────────────────────────────────────────────────
 elif page == "📰 Market Intelligence":
-    hero("📰", "Market Intelligence", "Full news, community, and competitor coverage")
+    hero("📰", "Market Intelligence",
+         "Recent news · competitor activity · emerging technologies · company announcements")
+    category_legend()
 
     news_docs    = [d for d in docs if d["source"] == "news"]
-    reddit_docs  = [d for d in docs if d["source"] == "reddit"]
     comp_docs    = [d for d in docs if d["source"] == "competitor"]
     company_docs = [d for d in docs if d["source"] == "company"]
+    reddit_docs  = [d for d in docs if d["source"] == "reddit"]
+    tech_docs    = [d for d in docs if d.get("category") == "trend"]   # emerging tech / trends
 
-    tab_news, tab_reddit, tab_comp, tab_company = st.tabs([
-        f"📰 News ({len(news_docs)})",
-        f"💬 Reddit ({len(reddit_docs)})",
-        f"🏢 Competitors ({len(comp_docs)})",
-        f"✈️ Company ({len(company_docs)})",
+    tab_news, tab_comp, tab_tech, tab_company, tab_comm = st.tabs([
+        f"📰 Recent news ({len(news_docs)})",
+        f"🏢 Competitor activity ({len(comp_docs)})",
+        f"📈 Emerging tech ({len(tech_docs)})",
+        f"✈️ Company announcements ({len(company_docs)})",
+        f"💬 Community ({len(reddit_docs)})",
     ])
 
     with tab_news:
@@ -432,19 +523,21 @@ elif page == "📰 Market Intelligence":
         else:
             st.info("No news documents in the current corpus.")
 
-    with tab_reddit:
-        if reddit_docs:
-            for x in reddit_docs:
-                doc_card(x, show_source=False)
-        else:
-            st.info("No Reddit documents in the current corpus.")
-
     with tab_comp:
         if comp_docs:
             for x in comp_docs:
                 doc_card(x, show_sentiment=False, show_source=False)
         else:
             st.info("No competitor documents in the current corpus.")
+
+    with tab_tech:
+        if tech_docs:
+            st.caption("Documents flagged as **emerging trends / technologies to monitor** "
+                       "(category = trend), pulled across all sources.")
+            for x in tech_docs:
+                doc_card(x)                          # show source — trend docs span all origins
+        else:
+            st.info("No trend / technology documents in the current corpus.")
 
     with tab_company:
         if company_docs:
@@ -453,15 +546,23 @@ elif page == "📰 Market Intelligence":
         else:
             st.info("No company documents in the current corpus.")
 
+    with tab_comm:
+        if reddit_docs:
+            for x in reddit_docs:
+                doc_card(x, show_source=False)
+        else:
+            st.info("No community documents in the current corpus.")
+
 
 # ─────────────────────────────────────────────────────────────────────────────
 # PAGE: Opportunities
 # ─────────────────────────────────────────────────────────────────────────────
 elif page == "🚀 Opportunities":
     opps = [d for d in docs if d["category"] == "opportunity"]
-    hero("🚀", "Opportunity Monitor", f"{len(opps)} documents classified as opportunities", "#0a5c2e")
+    hero("🚀", "Opportunity Monitor",
+         f"{len(opps)} opportunities — title · impact · evidence · confidence", "#0a5c2e")
     for x in sentiment_filter(opps, key="opp_filter"):
-        doc_card(x)
+        opportunity_card(x)
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -469,9 +570,10 @@ elif page == "🚀 Opportunities":
 # ─────────────────────────────────────────────────────────────────────────────
 elif page == "⚠️ Risks":
     risks = [d for d in docs if d["category"] == "risk"]
-    hero("⚠️", "Risk Monitor", f"{len(risks)} documents classified as risks", "#7a1c1c")
+    hero("⚠️", "Risk Monitor",
+         f"{len(risks)} risks — title · category · severity · evidence · confidence", "#7a1c1c")
     for x in source_filter(risks, key="risk_filter"):
-        doc_card(x)
+        risk_card(x)
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -518,6 +620,41 @@ elif page == "📊 Sentiment":
             pivot = df.pivot_table(index="source", columns="sentiment", aggfunc=len, fill_value=0)
             st.bar_chart(pivot)
 
+    # ── News sentiment vs Public sentiment (brief Section 5) ──
+    st.write("")
+    with st.container(border=True):
+        st.subheader("📰 News vs 💬 Public sentiment")
+        news_items   = [d for d in docs if d["source"] == "news"]
+        public_items = [d for d in docs if d["source"] == "reddit"]   # community = public voice
+        order  = ["negative", "neutral", "positive"]
+        news_c = Counter(d["sentiment"] for d in news_items)
+        pub_c  = Counter(d["sentiment"] for d in public_items)
+        news_v = [news_c.get(k, 0) for k in order]
+        pub_v  = [pub_c.get(k, 0)  for k in order]
+
+        x = np.arange(3); w = 0.38
+        fig, ax = plt.subplots(figsize=(6, 3.0))
+        fig.patch.set_facecolor("#05164D"); ax.set_facecolor("#05164D")
+        b1 = ax.bar(x - w/2, news_v, w, label="News",   color="#3498db")
+        b2 = ax.bar(x + w/2, pub_v,  w, label="Public", color="#F9BA00")
+        ax.set_xticks(x); ax.set_xticklabels(["Negative", "Neutral", "Positive"])
+        ax.tick_params(colors="white")
+        ax.set_ylabel("documents", color="white")
+        for sp in ax.spines.values(): sp.set_color("#33406b")
+        ax.bar_label(b1, color="white", fontsize=9, padding=2)
+        ax.bar_label(b2, color="white", fontsize=9, padding=2)
+        ax.legend(facecolor="#05164D", edgecolor="#33406b", labelcolor="white")
+        st.pyplot(fig)
+
+        def _dom(counter, n):
+            if not n:
+                return "—"
+            mx   = max(counter.get(k, 0) for k in order)
+            tied = [k for k in order if counter.get(k, 0) == mx]
+            return tied[0] if len(tied) == 1 else " & ".join(tied) + " (tied)"
+        st.caption(f"News ({len(news_items)} docs): leads with **{_dom(news_c, len(news_items))}**  ·  "
+                   f"Public ({len(public_items)} docs): leads with **{_dom(pub_c, len(public_items))}**")
+
     st.write("")
     with st.container(border=True):
         st.subheader("📋 Raw counts")
@@ -537,11 +674,11 @@ elif page == "🎯 Recommendations":
     for i, rec in enumerate(recommendations, 1):
         pr   = rec.get("priority", "—")
         col  = PRIO_COL.get(pr, "#05164D")
-        head = html.escape(rec.get("recommendation", ""))
-        why  = html.escape(rec.get("justification", ""))
-        imp  = html.escape(rec.get("expected_impact", ""))
-        risk = html.escape(str(rec.get("risk_level", "—")))
-        ev   = "".join(f"<li style='margin:5px 0'>{html.escape(e)}</li>"
+        head = html.escape(_txt(rec.get("recommendation", "")))
+        why  = html.escape(_txt(rec.get("justification", "")))
+        imp  = html.escape(_txt(rec.get("expected_impact", "")))
+        risk = html.escape(_txt(rec.get("risk_level", "—")))
+        ev   = "".join(f"<li style='margin:5px 0'>{html.escape(_txt(e))}</li>"
                        for e in rec.get("supporting_evidence", []))
         st.markdown(f"""
         <div style="border:1px solid rgba(128,140,180,.25);border-left:6px solid {col};

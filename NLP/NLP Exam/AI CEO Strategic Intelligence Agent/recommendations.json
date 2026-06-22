@@ -1,102 +1,118 @@
 [
   {
-    "recommendation": "Retain core competencies in mid-range performance category",
-    "justification": "Lufthansa is a mid-range performing brand within its category, and while it lags behind competitors in financial performance, it has opportunities to retain its strengths and focus on customer satisfaction.",
+    "recommendation": "Invest in improving customer experience",
+    "justification": "The positive reviews and experiences shared by customers suggest that there is room for improvement, and addressing these issues can help differentiate Lufthansa from competitors.",
     "supporting_evidence": [
-      "Lufthansa Review | Lufthansa.com/us/en Ratings & Customer: Based on our in-depth Lufthansa review, when compared to its competitors, Lufthansa is a mid-range performing brand within its category.",
-      "Lufthansa Group Investor Relations - Annual Report 2025: Page 4. Lufthansa Group Annual Report 2025. 004. Consolidated financial statements",
-      "Lufthansa to cut 4,000 jobs, raises profitability targets - Chief Executive Carsten Spohr said at the company's capital"
+      "Positive reddit comments about flying with Lufthansa, indicating areas where the airline excels",
+      "Negative experience comment on reddit, highlighting an area for improvement",
+      "Article announcing retirement of long-haul fleet, suggesting a need to revamp operations"
     ],
-    "expected_impact": "Improved customer satisfaction and retention through focus on mid-range performance category",
+    "expected_impact": "Improved customer satisfaction and loyalty, potentially leading to increased revenue and market share",
     "risk_level": "Medium",
     "priority": "High",
     "question": "What are the major opportunities for Lufthansa?",
     "sources": [
-      "https://report.lufthansagroup.com/2024/annual-report/en/downloads/",
-      "https://lufthansa.knoji.com/",
-      "https://www.myjoyonline.com/lufthansa-to-cut-4000-jobs-raises-profitability-targets/",
-      "https://investor-relations.lufthansagroup.com/fileadmin/downloads/en/financial-reports/annual-reports/LH-AR-2025-e.pdf",
-      "https://www.reddit.com/r/AviationPorn/comments/fwww75/lufthansa_to_retire_large_portion_of_longhaul/"
+      "https://ratingfacts.com/alternatives/lufthansa.com",
+      "https://www.reddit.com/r/Lufthansa/comments/1chp35g/my_great_experience_flying_with_lufthansa/",
+      "https://www.reddit.com/r/Lufthansa/comments/1k92jh7/how_your_first_time_experience_with_lufthansa/",
+      "https://www.reddit.com/r/AviationPorn/comments/fwww75/lufthansa_to_retire_large_portion_of_longhaul/",
+      "https://www.reddit.com/r/Lufthansa/comments/1gezo0p/lufthansa_reviews_w/"
     ]
   },
   {
-    "recommendation": "Invest in cost reduction initiatives",
-    "justification": "The evidence suggests that Lufthansa is facing significant pressure on its operating result, with a 37% decline in the third quarter and an overall loss of €20 million. This implies that cost management is a critical area for improvement.",
+    "recommendation": "Investigate and address passenger satisfaction concerns",
+    "justification": "The overwhelmingly negative reviews on Reddit suggest that Lufthansa has a significant issue with customer satisfaction, which may impact future bookings and revenue.",
     "supporting_evidence": [
-      "Operating result of the core brand fell by 37 percent in the third quarter",
-      "Airline posted a loss of €20 million - compared to a profit of €830 million in the strong previous year",
-      "Ticket prices are under particular pressure"
+      "Flew Lufthansa for the first time (multiple flights), will try to avoid them in the future. Here are my impressions."
     ],
-    "expected_impact": "Improved profitability and reduced financial risk",
+    "expected_impact": "Decreased customer loyalty and potentially lower ticket sales",
     "risk_level": "High",
     "priority": "High",
     "question": "What are the biggest risks for Lufthansa?",
     "sources": [
-      "https://money-tourism.gr/en/lufthansa-at-a-disadvantage-compared-to-competitors-cautious-optimism-in-forecasts/",
-      "https://www.lufthansa.com/ao/en/prepare-for-your-trip/current-travel-information",
-      "https://www.lufthansa.com/us/en/prepare-for-your-trip/current-travel-information",
-      "https://report.lufthansagroup.com/2024/annual-report/en/downloads/",
-      "https://www.marketscreener.com/quote/stock/LUFTHANSA-436827/news/Lufthansa-profit-falls-as-expected-cost-problems-48186109/"
+      "https://www.reddit.com/r/Lufthansa/comments/1gezo0p/lufthansa_reviews_w/",
+      "https://www.reddit.com/r/Lufthansa/comments/1chp35g/my_great_experience_flying_with_lufthansa/",
+      "https://www.reddit.com/r/Lufthansa/comments/1k92jh7/how_your_first_time_experience_with_lufthansa/",
+      "https://www.reddit.com/r/travel/comments/1gdg9r5/flew_lufthansa_for_the_first_time_multiple/",
+      "https://report.lufthansagroup.com/2025/annual-report/en/downloads/"
     ]
   },
   {
-    "recommendation": "Implement a comprehensive competitor analysis program to stay ahead of industry leaders",
-    "justification": "The evidence suggests that Lufthansa's competitors, such as United Airlines and Qatar Airways, are investing in comprehensive competitor analyses, which is contributing to their performance.",
+    "recommendation": "Analyze the competitive landscape by benchmarking against key competitors in multiple dimensions",
+    "justification": "Multiple sources confirm that various airlines, including United Airlines, Qatar Airways, Air France, Turkish Airlines, and Swiss International Air Lines, are among Lufthansa's top competitors. Understanding how these competitors perform across different metrics can help identify opportunities for improvement.",
     "supporting_evidence": [
-      "Lufthansa's competitors range from established European airlines to global giants and budget carriers",
-      "European rivals have closed the gap with Lufthansa's shares in recent months",
-      "The competition authority is investigating whether Lufthansa forced its corporate customers to provide information about competitors"
+      {
+        "source": "Top Lufthansa Competitors & Lookalikes",
+        "metrics": [
+          "real-time competitive intelligence",
+          "market analysis"
+        ]
+      },
+      {
+        "source": "Lufthansa Group Competitors & Lookalikes",
+        "metrics": [
+          "employee growth",
+          "revenue"
+        ]
+      },
+      {
+        "source": "Lufthansa Competitors - Comparably",
+        "metrics": [
+          "CEO Score",
+          "NPS"
+        ]
+      }
     ],
-    "expected_impact": "Improved market competitiveness and better financial performance",
-    "risk_level": "Medium",
+    "expected_impact": "Improved market position through data-driven decision making",
+    "risk_level": "Low",
     "priority": "High",
     "question": "What are competitors doing?",
     "sources": [
       "https://markets.apistemic.com/companies/lufthansa-e93bz",
-      "https://www.mbaskool.com/competitors/companies/18607-lufthansa.html",
-      "https://swottemplate.com/blogs/competitors/lufthansagroup-competitors",
-      "https://news.trabber.com/2011/05/lufthansa-is-probed-over-pricing-program/",
-      "https://srnnews.com/lufthansa-plays-catch-up-with-european-rivals-after-bumpy-ride/"
+      "https://markets.apistemic.com/companies/lufthansa-group-8a58d",
+      "https://craft.co/lufthansa-group/competitors",
+      "https://www.comparably.com/companies/lufthansa/competitors",
+      "https://rocketreach.co/lufthansa-competitors_b5c60955f42e0c53"
     ]
   },
   {
-    "recommendation": "Monitor and invest in data collection and analysis technologies",
-    "justification": "This recommendation follows from the evidence that Lufthansa's most fuel-efficient long-haul aircraft is becoming a 'data collector above the clouds', indicating an existing investment in this area. Additionally, the company's improved financial performance in Q1 2026 can be attributed to demand offsetting rising fuel costs, suggesting a focus on data-driven decision making.",
+    "recommendation": "Monitor developments in fuel-efficient long-haul aircraft technology",
+    "justification": "The evidence suggests that the Lufthansa Group is already investing in this area, with its most fuel-efficient long-haul aircraft becoming a data collector. Monitoring these technologies will help Lufthansa stay competitive and potentially improve operational efficiency.",
     "supporting_evidence": [
-      "The Lufthansa Group's most fuel-efficient long-haul aircraft becomes a data collector above the clouds",
-      "Lufthansa reported an improved financial performance in Q1 2026 with revenue rising 8% to €8.7 billion",
-      "Adjusted operating loss (EBIT) narrowed from €722 million to €612 million in Q1 2026"
+      "company: The Lufthansa Group's most fuel-efficient long-haul aircraft becomes a data collector above the clouds",
+      "news: Lufthansa is publishing Annual Reports, indicating a focus on financial performance",
+      "reddit: Lufthansa Reviews suggests that customer satisfaction may be an area of improvement"
     ],
-    "expected_impact": "Improved operational efficiency and decision making",
-    "risk_level": "Low",
-    "priority": "Medium",
+    "expected_impact": "Increased competitiveness and potential cost savings through improved operational efficiency",
+    "risk_level": "Medium",
+    "priority": "High",
     "question": "Which technologies or trends should Lufthansa management monitor?",
     "sources": [
-      "https://lufthansa.knoji.com/",
+      "https://ratingfacts.com/alternatives/lufthansa.com",
+      "https://companiesmarketcap.com/lufthansa/annual-reports/",
       "https://www.lufthansagroup.com/en/home.html",
-      "https://report.lufthansagroup.com/2024/annual-report/en/downloads/",
-      "https://www.lufthansa.com/us/en/prepare-for-your-trip/current-travel-information",
-      "https://www.airdatanews.com/lufthansa-group-q1-results-revenue-fuel-costs-outlook/"
+      "https://newsroom.lufthansagroup.com/en/?h=1",
+      "https://www.reddit.com/r/Lufthansa/comments/1gezo0p/lufthansa_reviews_w/"
     ]
   },
   {
-    "recommendation": "Accelerate fleet renewal and Turnaround program",
-    "justification": "The company has identified a need to strengthen its financial performance and increase productivity and efficiency. The evidence suggests that the current strategy is focused on these areas, and accelerating the implementation of key programs will help Lufthansa close the gap with competitors.",
+    "recommendation": "Invest in integrating air freight activities with its global logistics network",
+    "justification": "This recommendation follows from the CEO's goal of more closely integrating air freight activities with its global logistics network, as stated by Kühne in the Lufthansa Annual General Meeting.",
     "supporting_evidence": [
-      "Lufthansa's CEO mentions that the company lags behind competitors in terms of financial performance",
-      "The Annual Report 2025 highlights fleet renewal and future programs like Turnaround as key initiatives to strengthen the Group",
-      "The company is actively pursuing a comprehensive change aimed at increasing productivity, efficiency, and profitability"
+      "Kühne makes no secret of his expectation of a strategic realignment for the Lufthansa Group",
+      "CEO Carsten Spohr used the meeting to acknowledge the achievements of the past years and to highlight the challenges of global supply chains and the need for capacity expansion",
+      "The group plans to further expand its services in the summer of 2026, particularly through the integration of new long-haul models"
     ],
-    "expected_impact": "Improved financial performance, increased competitiveness",
+    "expected_impact": "Increased operational efficiency and improved competitiveness",
     "risk_level": "Medium",
     "priority": "High",
     "question": "What strategic actions should Lufthansa prioritize?",
     "sources": [
-      "https://www.myjoyonline.com/lufthansa-to-cut-4000-jobs-raises-profitability-targets/",
+      "https://report.lufthansagroup.com/2024/annual-report/en/combined-management-report/principles-of-the-group/strategies-and-goals/group-strategy/",
       "https://newsroom.lufthansagroup.com/en/lufthansa-strengthens-its-hubs-in-munich-and-frankfurt/",
-      "https://lufthansa.knoji.com/",
-      "https://investor-relations.lufthansagroup.com/fileadmin/downloads/en/financial-reports/annual-reports/LH-AR-2025-e.pdf",
-      "https://newsroom.lufthansagroup.com/en/lufthansa-group-is-consistently-pursuing-its-strategy-and-aims-to-significantly-increase-profitability/"
+      "https://www.aviationoutlook.com/p/lufthansa-strategic-analysis-outlook",
+      "https://aviation.direct/en/Growth-strategy-and-change-in-management-at-Deutsche-Lufthansa-AG",
+      "https://aviation.direct/en/Lufthansa-Annual-General-Meeting--personnel-changes-and-strategic-realignment"
     ]
   }
 ]
