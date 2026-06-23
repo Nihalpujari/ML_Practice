@@ -484,7 +484,7 @@ if page == "🏠 Overview":
              font-size:1.06rem;line-height:1.78;text-align:justify">
           <div style="font-family:sans-serif;color:#F9BA00;font-weight:700;font-size:.78rem;letter-spacing:2px;
                text-transform:uppercase;margin-bottom:8px">Why I chose Lufthansa</div>
-          I love travelling — mostly by aeroplane. I’m fascinated by the
+          I love travelling. I’m fascinated by the
           <strong style="color:#fff">discipline and planning</strong> behind how an airline runs: managing
           thousands of flights, crew and aircraft schedules every single day. And one day, I’d love to see
           the cockpit. ✈️
