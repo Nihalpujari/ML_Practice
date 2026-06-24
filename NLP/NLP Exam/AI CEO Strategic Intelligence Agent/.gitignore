@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.ipynb_checkpoints/
+
+# Virtual environments
+.venv/
+venv/
+env/
+ml_env/
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# Presentation / Word files (kept out of the code repo)
+*.pptx
+*.docx
+
+# Build artifacts
+pptx_build/
