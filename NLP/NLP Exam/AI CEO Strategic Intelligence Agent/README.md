@@ -5,6 +5,13 @@ about **Lufthansa**, stores and indexes it, analyzes it for opportunities / risk
 uses a **local open-source LLM** to reason over the evidence and generate **executive-level,
 evidence-based recommendations** — presented in an interactive dashboard.
 
+It runs as an **autonomous AI agent**: given a goal, it **plans** its approach, **retrieves**
+evidence using multiple tools, **analyzes** it, **decides** whether the evidence is sufficient
+(searching again if not), **recommends** an action, and **validates** that recommendation against
+the evidence before presenting it — a **Goal → Plan → Retrieve → Analyze → Decide → Recommend →
+Validate** workflow. Every step is shown, so the agent's reasoning is transparent rather than a
+black box.
+
 > **The goal is not information retrieval. The goal is strategic decision-making.**
 > The system is built to answer: *"If you were the CEO today, what would you do next and why?"*
 
@@ -38,6 +45,22 @@ evidence-based recommendations** — presented in an interactive dashboard.
 | Section 7 — CEO Briefing (executive summary) | ✅ Done |
 | Executive Dashboard (Streamlit, 8 pages + live chat) | ✅ Done |
 | Dashboard bonus — Semantic vs Hybrid comparison panel | ⚪ Optional |
+
+### Agentic Upgrade (for the 30 June retake)
+
+The system is being extended from a single-pass RAG pipeline into a full **AI agent** with explicit
+planning, multi-tool use, self-correction, and validation — a **Goal → Plan → Retrieve → Analyze →
+Decide → Recommend → Validate** loop.
+
+| Agent step | What it does | Status |
+|-----------|--------------|--------|
+| **Plan** | break the goal into specific sub-questions | ✅ Built |
+| **Retrieve** | per sub-question, run **3 tools** (semantic + BM25 + hybrid), dedup, keep best-k by **consensus** | ✅ Built |
+| **Analyze** | classify the retrieved evidence (risk / opportunity / trend) | 🔜 In progress |
+| **Decide** | judge if evidence is enough; reformulate & search again if not | ⬜ Planned |
+| **Recommend** | structured, evidence-based recommendation | ♻️ Reuses Task 5/6 |
+| **Validate** | check the recommendation is grounded in evidence; redo if not | ⬜ Planned |
+| **Orchestrator** | tie the loop together, with all steps shown (transparency) | ⬜ Planned |
 
 ---
 
@@ -90,34 +113,67 @@ flowchart TD
         CO[Company official site]
     end
 
-    SOURCES -->|DDGS web search| COLLECT[Task 1: Collector<br/>clean + de-duplicate<br/>by URL & text]
-    COLLECT -->|text + url + source| JSON[(lufthansa_data.json<br/>185 clean docs)]
+    SOURCES -->|DDGS web search| COLLECT[Task 1: Collector<br/>clean + de-duplicate]
+    COLLECT --> JSON[(lufthansa_data.json<br/>185 clean docs)]
 
-    JSON -->|clean text to embed| PROC[Task 2 + 3:<br/>process & embed<br/>all-MiniLM-L6-v2]
-    PROC -->|384-dim vectors| CHROMA[(ChromaDB<br/>vectors + text<br/>+ metadata)]
-    PROC -->|word tokens| BM25[(BM25 keyword index)]
-    PROC -. embeddings .-> COS[cosine similarity<br/>on embeddings]
+    JSON -->|embed all-MiniLM-L6-v2| CHROMA[(ChromaDB<br/>vectors)]
+    JSON -->|word tokens| BM25IDX[(BM25 index)]
+    JSON -->|zero-shot classify| INTEL[Task 4: Classifier<br/>risk / opportunity / trend<br/>+ sentiment + severity]
+    INTEL --> LABELED[(lufthansa_labeled.json)]
 
-    JSON -->|raw text to classify| INTEL[Task 4: Intelligence Engine<br/>zero-shot category<br/>+ confidence<br/>3-class sentiment<br/>+ risk severity]
-    INTEL -->|adds label fields| LABELED[(lufthansa_labeled.json)]
-    AGENT -. rates opportunity impact .-> LABELED
+    CHROMA --> SEM[Semantic search]
+    BM25IDX --> BM[BM25 search]
+    CHROMA --> HYB[Hybrid search]
+    BM25IDX --> HYB
 
-    CHROMA -->|collection.query| SEM[Semantic retrieval]
-    BM25 -->|keyword score| HYB[Hybrid retrieval<br/>normalize +<br/>50/50 score fusion]
-    COS -->|dense score| HYB
+    subgraph AGENT[AI Agent — runs per question]
+        GOAL([Goal: CEO question]) --> PLAN[1 - PLAN<br/>break goal into<br/>specific sub-questions]
+        PLAN --> RETR[2 - RETRIEVE<br/>per sub-question: run all 3 tools<br/>dedup + best-k by consensus]
+        RETR --> ANALYZE[3 - ANALYZE<br/>classify the evidence<br/>risk / opportunity / trend]
+        ANALYZE --> DECIDE{4 - DECIDE<br/>enough evidence?}
+        DECIDE -->|no - reformulate| PLAN
+        DECIDE -->|yes| RECOMMEND[5 - RECOMMEND<br/>Ollama llama3.1:8b<br/>structured JSON]
+        RECOMMEND --> VALIDATE{6 - VALIDATE<br/>grounded in evidence?}
+        VALIDATE -->|no - redo| RECOMMEND
+        VALIDATE -->|yes| RECS[(recommendations.json)]
+    end
 
-    SEM -->|top-k evidence| AGENT[Task 5: AI CEO Agent<br/>Ollama llama3.1:8b]
-    HYB -. built, not yet wired .-> AGENT
-    AGENT -->|structured JSON| RECS[(recommendations.json<br/>Task 6 fields:<br/>recommendation<br/>justification<br/>supporting evidence<br/>expected impact<br/>risk level<br/>priority)]
-    RECS -->|synthesise| BRIEF[Section 7: CEO Briefing]
-    BRIEF -->|summary| CB[(ceo_briefing.json)]
+    SEM -. tool .-> RETR
+    BM  -. tool .-> RETR
+    HYB -. tool .-> RETR
+    INTEL -. labels .-> ANALYZE
+    MEM[(conversation memory)] -. context .-> PLAN
 
-    LABELED -->|load| DASH[Executive Dashboard<br/>Streamlit · 8 pages<br/>+ live chat]
-    RECS -->|load| DASH
-    CB -->|load| DASH
+    RECS --> BRIEF[Section 7: CEO Briefing]
+    BRIEF --> CB[(ceo_briefing.json)]
+    LABELED --> DASH[Executive Dashboard<br/>Streamlit · 8 pages<br/>+ live agent chat]
+    RECS --> DASH
+    CB --> DASH
 ```
 
-> **Accuracy notes (matches the code):** Cleaning happens **once at collection** (Task 1), so `lufthansa_data.json` is already clean (185 docs) and every downstream stage reads clean data. **Task 4** now saves, per document: `category` + its zero-shot **confidence** (`category_score`), 3-class **sentiment**, and a zero-shot **severity** for risks; the LLM additionally rates each opportunity's **impact** (High / Medium / Low). Retrieval has **two paths** — *semantic* via `collection.query` (used by the agent **and** the live chat) and *hybrid* = BM25 + cosine-on-embeddings (built & tested standalone, not yet wired into the agent). The agent currently uses **semantic** retrieval.
+> **Accuracy notes (matches the code):** Cleaning happens **once at collection** (Task 1), so `lufthansa_data.json` is already clean (185 docs). **Task 4** saves, per document: `category` + its zero-shot **confidence** (`category_score`), 3-class **sentiment**, and a zero-shot **severity** for risks; the LLM rates each opportunity's **impact** (High / Medium / Low). The **agent** treats all three retrievers — *semantic*, *BM25*, and *hybrid* — as **tools**: for each planned sub-question it runs all three, pools the results, dedups by URL, and keeps the best documents by **consensus** (documents found by more methods rank higher). The Analyze step reads the Task-4 labels of the retrieved docs.
+
+---
+
+## AI Agent Workflow
+
+The agent turns a CEO **goal** into a **validated recommendation** through 7 explicit, visible steps.
+Each step's output is printed, so the reasoning is transparent (not a black box).
+
+| # | Step | What happens | How |
+|---|------|--------------|-----|
+| 1 | **Plan** | break the goal into 2–4 specific, keyword-rich sub-questions | LLM (`make_plan`) |
+| 2 | **Retrieve** | for each sub-question, run **all 3 tools** (semantic + BM25 + hybrid), dedup by URL, keep best-k by **consensus** | tools (`retrieve_evidence`, `gather_evidence`) |
+| 3 | **Analyze** | classify the retrieved evidence (risk / opportunity / trend) by reading the Task-4 labels | classifier labels |
+| 4 | **Decide** | judge whether the evidence is enough; if not, reformulate the query and retrieve again (capped loop) | LLM |
+| 5 | **Recommend** | write the structured recommendation (action + justification + evidence + impact + risk + priority) | LLM (reuses Task 5/6) |
+| 6 | **Validate** | check every claim is grounded in the evidence; if not, regenerate (capped loop) | LLM |
+| 7 | **Deliver** | the validated recommendation goes to `recommendations.json` and the dashboard | — |
+
+**Agent capabilities demonstrated:** planning before execution · tool use beyond the LLM · autonomous
+decision-making (sufficiency + reformulation) · retrieval and use of evidence · analysis of risks /
+opportunities / trends · validation of recommendations before presenting. Built from plain Python +
+Ollama (no agent framework) for full control and explainability.
 
 ---
 
@@ -125,20 +181,25 @@ flowchart TD
 
 ```mermaid
 flowchart LR
-    Q[CEO question] --> SEM[collection.query<br/>semantic retrieval]
-    SEM --> CTX[build context<br/>docs tagged with source]
-    CTX --> PROMPT[prompt: system + user<br/>format=json]
-    PROMPT --> LLM[Ollama llama3.1:8b<br/>reason]
-    LLM --> OUT[structured recommendation<br/>recommendation<br/>justification<br/>supporting evidence<br/>expected impact<br/>risk level<br/>priority]
+    Q[CEO goal] --> PLAN[plan<br/>sub-questions]
+    PLAN --> RETR[retrieve<br/>3 tools + consensus]
+    RETR --> ANA[analyze<br/>classify evidence]
+    ANA --> DEC{enough?}
+    DEC -->|no| PLAN
+    DEC -->|yes| REC[recommend<br/>format=json]
+    REC --> VAL{grounded?}
+    VAL -->|no| REC
+    VAL -->|yes| OUT[validated recommendation]
     OUT --> BRIEF[CEO briefing synthesis]
     OUT --> UI[dashboard]
     BRIEF --> UI
 ```
 
-**Plain-language flow (the RAG pipeline):**
-`collect → clean → embed → store/index → retrieve (semantic) → augment prompt → generate (JSON) → briefing → display`
+**Plain-language flow (the agent loop):**
+`goal → plan → retrieve (3 tools, consensus) → analyze → decide (enough?) → recommend → validate (grounded?) → deliver`
 
-> The **hybrid** path (BM25 + cosine) is implemented separately; swapping it into the agent (replacing `collection.query` with `hybrid_search`) is a one-step change.
+> The two diamonds — **decide** and **validate** — can loop back, which is what makes this an *agent*
+> (it self-corrects) rather than a one-shot pipeline. All three retrievers are used together as tools.
 
 ---
 
