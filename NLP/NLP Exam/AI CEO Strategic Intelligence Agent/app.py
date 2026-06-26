@@ -19,6 +19,8 @@ import chromadb, ollama
 from sentence_transformers import SentenceTransformer
 from sklearn.metrics.pairwise import cosine_similarity
 
+from agent import run_agent          # the full AI agent (Plan→Retrieve→Analyze→Decide→Recommend→Validate)
+
 st.set_page_config(page_title="AI CEO — Lufthansa", page_icon="🛫", layout="wide")
 
 
@@ -783,7 +785,7 @@ with st.popover("💬", use_container_width=False):
         sent = st.form_submit_button("Ask  ➤", use_container_width=True)
 
     if sent and question:
-        with st.spinner("Retrieving evidence and reasoning… (~2 min on CPU)"):
-            rec = ceo_agent(question)
+        with st.spinner("🧠 Planning → retrieving → analyzing → deciding → recommending → validating… (a few min on CPU)"):
+            rec = run_agent(question, history=st.session_state.chat_history, max_tries=1)
         st.session_state.chat_history.append(rec)
         st.rerun()
