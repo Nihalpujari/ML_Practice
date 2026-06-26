@@ -1,12 +1,22 @@
 [
   {
-    "recommendation": "Invest in customer experience improvement",
-    "justification": "The evidence suggests that Lufthansa's current customer experience is inconsistent, with some users having positive experiences (reddit) while others have negative ones. This inconsistency and lack of clarity around the company's offerings (missing description for 'Lufthansa Reviews' page on Reddit) provide opportunities for improvement.",
+    "recommendation": "Invest in improving customer experience to differentiate from competitors",
+    "justification": "The existing negative reviews on Reddit suggest that Lufthansa's customer experience needs improvement, and this is a key area where they can differentiate themselves from competitors.",
     "supporting_evidence": [
-      "The reddit user who had a great experience flying with Lufthansa is an exception, suggesting that there may be room for improvement in customer satisfaction",
-      "Lufthansa's long-haul fleet retirement (reddit) could indicate a need to adapt and improve services to meet changing market demands"
+      {
+        "source": "reddit",
+        "text": "I don't often fly Lufthansa but eww what an experience."
+      },
+      {
+        "source": "Lufthansa to retire large portion of long-haul fleet and",
+        "text": "retire large portion of long-haul fleet"
+      },
+      {
+        "source": "RatingFacts",
+        "text": "Looking for alternatives to Lufthansa"
+      }
     ],
-    "expected_impact": "Improved brand reputation, increased customer loyalty, and potential revenue growth through enhanced customer experiences",
+    "expected_impact": "Improved customer satisfaction, increased loyalty, and potential increase in market share",
     "risk_level": "Medium",
     "priority": "High",
     "question": "What are the major opportunities for Lufthansa?",
@@ -19,19 +29,23 @@
     ]
   },
   {
-    "recommendation": "Investigate and address customer satisfaction issues",
-    "justification": "Lufthansa is receiving negative reviews from customers, indicating potential quality control issues that may impact loyalty and retention.",
+    "recommendation": "Conduct thorough analysis of passenger satisfaction and service quality to address concerns",
+    "justification": "The negative reviews on Reddit suggest that there may be underlying issues with customer experience, which could impact loyalty and retention.",
     "supporting_evidence": [
       {
         "source": "reddit",
-        "content": "eww what an experience"
+        "description": "Multiple customers expressed dissatisfaction with their experiences flying Lufthansa"
       },
       {
         "source": "reddit",
-        "content": "will try to avoid them in the future"
+        "description": "Customers mentioned wanting to avoid flying with Lufthansa in the future"
+      },
+      {
+        "source": "company",
+        "description": "The Executive Board is responsible for addressing financial and operational performance"
       }
     ],
-    "expected_impact": "Loss of customer loyalty and retention, potentially impacting revenue",
+    "expected_impact": "Potential loss of customer loyalty and retention",
     "risk_level": "Medium",
     "priority": "High",
     "question": "What are the biggest risks for Lufthansa?",
@@ -44,14 +58,14 @@
     ]
   },
   {
-    "recommendation": "Monitor and analyze the competitive landscape of major airlines through real-time data",
-    "justification": "Multiple sources indicate that top competitors such as United Airlines, Qatar Airways, and Air France are being closely monitored in terms of revenue, employee growth, CEO Score, and other metrics.",
+    "recommendation": "Invest in digital transformation to enhance customer experience and compete effectively with industry leaders",
+    "justification": "Lufthansa faces intense competition from established players such as United Airlines, Qatar Airways, Air France, and others. To remain competitive, Lufthansa needs to invest in digital transformation to enhance customer experience and improve operational efficiency.",
     "supporting_evidence": [
-      "Top Lufthansa Competitors & Lookalikes. Discover Lufthansa's top competitors in 2026: United Airlines, Qatar Airways, Air France.",
-      "Lufthansa Group's main competitors include Turkish Airlines, Air France-KLM, Finnair and China Southern Airlines by revenue and employee growth metrics at Craft.",
-      "Lufthansa ranks 1st in CEO Score on Comparably vs its competitors."
+      "Competitors like United Airlines, Swiss International Air Lines, LATAM Airlines are top competitors for both Lufthansa and Lufthansa Group",
+      "Lufthansa ranks 1st in CEO Score on Comparably vs its competitors, indicating a strong leadership",
+      "Industry leaders like Qatar Airways and Air France-KLM are investing heavily in digital transformation"
     ],
-    "expected_impact": "Enhanced market analysis capabilities for informed business decisions",
+    "expected_impact": "Improved customer satisfaction, increased revenue growth, and enhanced competitiveness",
     "risk_level": "Medium",
     "priority": "High",
     "question": "What are competitors doing?",
@@ -64,16 +78,25 @@
     ]
   },
   {
-    "recommendation": "Monitor and invest in data collection and analytics from fuel-efficient aircraft",
-    "justification": "The evidence suggests that the company is already exploring innovative uses of its aircraft, such as collecting data above the clouds. This indicates a willingness to leverage technology for operational efficiency.",
+    "recommendation": "Monitor and invest in fuel-efficient long-haul aircraft technology",
+    "justification": "The company's own press release highlights the fuel efficiency of their new aircraft as a key feature, suggesting that this is an area of innovation they are already prioritizing. Additionally, the presence of a data collector above the clouds implies a focus on using technology to improve operations.",
     "supporting_evidence": [
-      "Lufthansa Group's most fuel-efficient long-haul aircraft becomes a data collector above the clouds",
-      "The Lufthansa Group's Annual Reports suggest a focus on sustainability and operational efficiency",
-      "The company has a history of launching new services, such as the new long-haul service in 2026"
+      {
+        "source": "company",
+        "text": "The Lufthansa Group's most fuel-efficient long-haul aircraft becomes a data collector above the clouds"
+      },
+      {
+        "source": "news",
+        "text": "Looking for alternatives to Lufthansa? We ranked 20 similar companies by review count and rating so you can pick the best option."
+      },
+      {
+        "source": "company",
+        "text": "New long-haul service launches on May 6To mark the 100th anniversary of its founding: One of the largest long-haul aircraft in the world"
+      }
     ],
-    "expected_impact": "Improved operational efficiency and potential cost savings through data-driven decision making",
-    "risk_level": "Low",
-    "priority": "Medium",
+    "expected_impact": "Improved operational efficiency and reduced carbon emissions",
+    "risk_level": "Medium",
+    "priority": "High",
     "question": "Which technologies or trends should Lufthansa management monitor?",
     "sources": [
       "https://ratingfacts.com/alternatives/lufthansa.com",
@@ -84,14 +107,14 @@
     ]
   },
   {
-    "recommendation": "Integrate Lufthansa Cargo with the global logistics network",
-    "justification": "This recommendation follows from the CEO's emphasis on integrating air freight activities and increasing operational efficiency, as well as the need for capacity expansion in a challenging global supply chain environment.",
+    "recommendation": "Integrate Lufthansa Cargo's air freight activities with its global logistics network",
+    "justification": "This recommendation follows from the evidence that CEO Carsten Spohr has acknowledged the need for capacity expansion and highlighted the challenges of global supply chains. Kühne, a representative at the Annual General Meeting, also expects a strategic realignment to integrate air freight activities with its global logistics network.",
     "supporting_evidence": [
-      "CEO Carsten Spohr acknowledged the challenges of global supply chains and the need for capacity expansion",
-      "The group plans to further expand its services through the integration of new long-haul models",
-      "Kühne's goal is to more closely integrate air freight activities with its global logistics network"
+      "CEO Jens Ritter has expressed optimism about achieving strong profitability in 2026, noting that the airline is on track to meet all its 2025 cost-saving and service improvement targets.",
+      "The group plans to further expand its services in the summer of 2026, particularly through the integration of new long-haul models.",
+      "Kühne makes no secret of his expectation of a strategic realignment for the Lufthansa Group."
     ],
-    "expected_impact": "Increased operational efficiency and revenue growth through integrated logistics capabilities",
+    "expected_impact": "Increased operational efficiency and revenue growth",
     "risk_level": "Medium",
     "priority": "High",
     "question": "What strategic actions should Lufthansa prioritize?",
