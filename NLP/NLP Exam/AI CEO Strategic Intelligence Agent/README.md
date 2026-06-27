@@ -336,19 +336,28 @@ routing** — pick the retriever per question type — is noted as future work.)
 
 ```
 AI CEO Strategic Intelligence Agent/
-├── README.md                          # this file
-├── app.py                             # Executive dashboard (Streamlit) — 8 pages + live chat
-├── Data Collection.ipynb              # Task 1 — DDGS collector + clean + dedup
-├── Knowledge Repository.ipynb         # Task 2/3 + retrieval (semantic + hybrid)
-├── Strategic Intelligence Engine.ipynb# Task 4 — classification + sentiment
-├── CEO Agent.ipynb                    # Task 5/6 + Section 7 — RAG reasoning + recommendations
-├── chroma_db/                         # persistent vector store (Task 2)
-├── lufthansa_data.json                # 185 clean, deduped documents (Task 1 output)
-├── lufthansa_labeled.json             # same docs + category + sentiment (Task 4 output)
-├── recommendations.json               # 5 pre-generated CEO recommendations (Task 5/6)
-├── ceo_briefing.json                  # executive summary (Section 7)
-├── images/background.jpg                     # Overview cover image
-└── images/lufthansa.png                      # sidebar / fallback banner
+├── README.md                           # this file
+├── requirements.txt                    # Python dependencies
+│
+├── Data Collection.ipynb               # Task 1 — DDGS collector + clean + dedup
+├── Knowledge Repository.ipynb          # Task 2/3 — store + embed + retrieval (semantic + hybrid)
+├── Strategic Intelligence Engine.ipynb # Task 4 — zero-shot classification + sentiment
+├── CEO Agent.ipynb                     # Task 5/6 + agent build (Plan → ... → Validate)
+│
+├── retrieval.py                        # the 3 retrieval tools (semantic / BM25 / hybrid)
+├── agent.py                            # the AI agent — run_agent() (Goal→Plan→Retrieve→Analyze→Decide→Recommend→Validate)
+├── app.py                              # Executive dashboard (Streamlit) — 8 pages + live agent chat
+│
+├── data/                               # all JSON data
+│   ├── lufthansa_data.json             #   185 clean, deduped docs (Task 1 output)
+│   ├── lufthansa_labeled.json          #   same docs + category / sentiment / severity (Task 4 output)
+│   ├── recommendations.json            #   pre-generated CEO recommendations (Task 5/6)
+│   └── ceo_briefing.json               #   executive summary (Section 7)
+├── chroma_db/                          # persistent vector store (Task 2)
+├── images/                             # dashboard images
+│   ├── background.jpg                  #   Overview cover image
+│   └── lufthansa.png                   #   sidebar / fallback banner
+└── backups/                            # local notebook / file backups
 ```
 
 ---
