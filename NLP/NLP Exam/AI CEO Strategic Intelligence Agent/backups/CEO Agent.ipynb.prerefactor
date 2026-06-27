@@ -50,7 +50,7 @@
     }
    ],
    "source": [
-    "PATH = \"data/lufthansa_labeled.json\"\n",
+    "PATH = \"lufthansa_labeled.json\"\n",
     "labeled = json.load(open(PATH, encoding=\"utf-8\"))\n",
     "\n",
     "for d in labeled:\n",
@@ -145,7 +145,7 @@
     "    recommendations.append(ceo_agent(q))\n",
     "\n",
     "json.dump(recommendations,\n",
-    "          open(\"data/recommendations.json\", \"w\", encoding=\"utf-8\"),\n",
+    "          open(\"recommendations.json\", \"w\", encoding=\"utf-8\"),\n",
     "          ensure_ascii=False, indent=2)\n",
     "print(\"\\n Saved\", len(recommendations), \"recommendations\")"
    ]
@@ -213,7 +213,7 @@
    ],
    "source": [
     "briefing = ceo_briefing(recommendations)\n",
-    "json.dump(briefing, open(\"data/ceo_briefing.json\", \"w\", encoding=\"utf-8\"),\n",
+    "json.dump(briefing, open(\"ceo_briefing.json\", \"w\", encoding=\"utf-8\"),\n",
     "          ensure_ascii=False, indent=2)\n",
     "print(json.dumps(briefing, indent=2, ensure_ascii=False))"
    ]
@@ -650,7 +650,7 @@
  ],
  "metadata": {
   "kernelspec": {
-   "display_name": "ml_env (3.11.9.final.0)",
+   "display_name": "ml_env (3.11.9)",
    "language": "python",
    "name": "python3"
   },

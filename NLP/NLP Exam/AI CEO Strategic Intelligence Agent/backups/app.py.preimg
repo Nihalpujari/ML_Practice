@@ -203,8 +203,8 @@ if "chat_history" not in st.session_state:
 # SIDEBAR
 # ─────────────────────────────────────────────────────────────────────────────
 with st.sidebar:
-    if os.path.exists("images/lufthansa.png"):
-        st.image("images/lufthansa.png", use_container_width=True)
+    if os.path.exists("lufthansa.png"):
+        st.image("lufthansa.png", use_container_width=True)
     else:
         st.title("🛫 AI CEO")
     st.caption("Lufthansa · Strategic Intelligence Agent")
@@ -390,7 +390,7 @@ if page == "🏠 Overview":
 
     # cover image (jpg preferred, png fallback, gradient if neither)
     cover_bg = "linear-gradient(135deg,#05164D,#0a2570)"
-    for fname, mime in [("images/background.jpg", "jpeg"), ("images/lufthansa.png", "png")]:
+    for fname, mime in [("background.jpg", "jpeg"), ("lufthansa.png", "png")]:
         if os.path.exists(fname):
             with open(fname, "rb") as f:
                 b64 = base64.b64encode(f.read()).decode()

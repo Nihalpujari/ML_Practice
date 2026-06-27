@@ -158,7 +158,7 @@
    "source": [
     "# save the CLEAN data\n",
     "import json\n",
-    "json.dump(clean_docs, open(\"data/lufthansa_data.json\", \"w\", encoding=\"utf-8\"),\n",
+    "json.dump(clean_docs, open(\"lufthansa_data.json\", \"w\", encoding=\"utf-8\"),\n",
     "          ensure_ascii=False, indent=2)\n",
     "print(\"Saved\", len(clean_docs), \"clean docs\")"
    ]

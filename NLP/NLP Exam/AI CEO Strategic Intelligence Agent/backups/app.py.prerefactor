@@ -128,9 +128,9 @@ hr { border-color: rgba(5,22,77,0.2) !important; }
 # ─────────────────────────────────────────────────────────────────────────────
 @st.cache_data
 def load_data():
-    docs     = json.load(open("data/lufthansa_labeled.json", encoding="utf-8"))
-    recs     = json.load(open("data/recommendations.json",   encoding="utf-8"))
-    briefing = json.load(open("data/ceo_briefing.json",      encoding="utf-8"))
+    docs     = json.load(open("lufthansa_labeled.json", encoding="utf-8"))
+    recs     = json.load(open("recommendations.json",   encoding="utf-8"))
+    briefing = json.load(open("ceo_briefing.json",      encoding="utf-8"))
     return docs, recs, briefing
 
 @st.cache_resource
@@ -138,7 +138,7 @@ def load_retrieval():
     client     = chromadb.PersistentClient(path="chroma_db")
     collection = client.get_collection("lufthansa")
     model      = SentenceTransformer("all-MiniLM-L6-v2")
-    texts      = [d["text"] for d in json.load(open("data/lufthansa_labeled.json", encoding="utf-8"))]
+    texts      = [d["text"] for d in json.load(open("lufthansa_labeled.json", encoding="utf-8"))]
     doc_emb    = model.encode(texts)
     return collection, model, texts, doc_emb
 
@@ -203,8 +203,8 @@ if "chat_history" not in st.session_state:
 # SIDEBAR
 # ─────────────────────────────────────────────────────────────────────────────
 with st.sidebar:
-    if os.path.exists("images/lufthansa.png"):
-        st.image("images/lufthansa.png", use_container_width=True)
+    if os.path.exists("lufthansa.png"):
+        st.image("lufthansa.png", use_container_width=True)
     else:
         st.title("🛫 AI CEO")
     st.caption("Lufthansa · Strategic Intelligence Agent")
@@ -390,7 +390,7 @@ if page == "🏠 Overview":
 
     # cover image (jpg preferred, png fallback, gradient if neither)
     cover_bg = "linear-gradient(135deg,#05164D,#0a2570)"
-    for fname, mime in [("images/background.jpg", "jpeg"), ("images/lufthansa.png", "png")]:
+    for fname, mime in [("background.jpg", "jpeg"), ("lufthansa.png", "png")]:
         if os.path.exists(fname):
             with open(fname, "rb") as f:
                 b64 = base64.b64encode(f.read()).decode()
@@ -450,7 +450,7 @@ if page == "🏠 Overview":
     """, unsafe_allow_html=True)
 
     # ── company facts (the brief's required Overview fields) ──
-    last_update = datetime.fromtimestamp(os.path.getmtime("data/lufthansa_data.json")).strftime("%d %b %Y, %H:%M")
+    last_update = datetime.fromtimestamp(os.path.getmtime("lufthansa_data.json")).strftime("%d %b %Y, %H:%M")
     facts = [
         ("Company", "Lufthansa"), ("Industry", "Aviation"),
         ("Documents", str(len(docs))), ("Data sources", str(n_src)),

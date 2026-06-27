@@ -17,7 +17,7 @@
    "source": [
     "import json, chromadb\n",
     "\n",
-    "documents = json.load(open(\"data/lufthansa_data.json\", encoding=\"utf-8\"))   # now 195 clean\n",
+    "documents = json.load(open(\"lufthansa_data.json\", encoding=\"utf-8\"))   # now 195 clean\n",
     "texts     = [d[\"text\"] for d in documents]\n",
     "ids       = [str(i) for i in range(len(documents))]\n",
     "metadatas = [{\"source\": d[\"source\"], \"url\": d[\"url\"]} for d in documents]\n",

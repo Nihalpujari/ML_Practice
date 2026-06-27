@@ -53,7 +53,7 @@
    ],
    "source": [
     "import json\n",
-    "documents = json.load(open(\"data/lufthansa_data.json\", encoding=\"utf-8\"))\n",
+    "documents = json.load(open(\"lufthansa_data.json\", encoding=\"utf-8\"))\n",
     "\n",
     "labels = [\"opportunity\", \"risk\", \"trend\"]\n",
     "\n",
@@ -154,7 +154,7 @@
    "source": [
     "import json\n",
     "json.dump(documents,\n",
-    "          open(\"data/lufthansa_labeled.json\", \"w\", encoding=\"utf-8\"),\n",
+    "          open(\"lufthansa_labeled.json\", \"w\", encoding=\"utf-8\"),\n",
     "          ensure_ascii=False, indent=2)\n",
     "print(\"Saved\", len(documents), \"labeled docs\")"
    ]

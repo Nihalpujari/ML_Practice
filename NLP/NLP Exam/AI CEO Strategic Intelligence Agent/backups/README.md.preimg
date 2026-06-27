@@ -345,8 +345,8 @@ AI CEO Strategic Intelligence Agent/
 ├── lufthansa_labeled.json             # same docs + category + sentiment (Task 4 output)
 ├── recommendations.json               # 5 pre-generated CEO recommendations (Task 5/6)
 ├── ceo_briefing.json                  # executive summary (Section 7)
-├── images/background.jpg                     # Overview cover image
-└── images/lufthansa.png                      # sidebar / fallback banner
+├── background.jpg                     # Overview cover image
+└── lufthansa.png                      # sidebar / fallback banner
 ```
 
 ---

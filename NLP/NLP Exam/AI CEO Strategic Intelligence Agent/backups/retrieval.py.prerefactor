@@ -6,7 +6,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 from rank_bm25 import BM25Okapi
 
 #  SETUP (runs once on import) 
-docs  = json.load(open("data/lufthansa_labeled.json", encoding="utf-8"))
+docs  = json.load(open("lufthansa_labeled.json", encoding="utf-8"))
 texts = [d["text"] for d in docs]
 
 client     = chromadb.PersistentClient(path="chroma_db")
