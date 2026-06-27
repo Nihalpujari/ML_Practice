@@ -46,21 +46,23 @@ black box.
 | Executive Dashboard (Streamlit, 8 pages + live chat) | ✅ Done |
 | Dashboard bonus — Semantic vs Hybrid comparison panel | ⚪ Optional |
 
-### Agentic Upgrade (for the 30 June retake)
+### Agentic Upgrade (for the 30 June retake) — ✅ COMPLETE
 
-The system is being extended from a single-pass RAG pipeline into a full **AI agent** with explicit
-planning, multi-tool use, self-correction, and validation — a **Goal → Plan → Retrieve → Analyze →
-Decide → Recommend → Validate** loop.
+The system has been extended from a single-pass RAG pipeline into a full **AI agent** with explicit
+planning, multi-tool use, self-correction, memory, and validation — a **Goal → Plan → Retrieve →
+Analyze → Decide → Recommend → Validate** loop, implemented in `agent.py` (`run_agent`) and wired
+into the dashboard's live chat. Every step prints its reasoning (transparency).
 
 | Agent step | What it does | Status |
 |-----------|--------------|--------|
 | **Plan** | break the goal into specific sub-questions | ✅ Built |
 | **Retrieve** | per sub-question, run **3 tools** (semantic + BM25 + hybrid), dedup, keep best-k by **consensus** | ✅ Built |
-| **Analyze** | classify the retrieved evidence (risk / opportunity / trend) | 🔜 In progress |
-| **Decide** | judge if evidence is enough; reformulate & search again if not | ⬜ Planned |
-| **Recommend** | structured, evidence-based recommendation | ♻️ Reuses Task 5/6 |
-| **Validate** | check the recommendation is grounded in evidence; redo if not | ⬜ Planned |
-| **Orchestrator** | tie the loop together, with all steps shown (transparency) | ⬜ Planned |
+| **Analyze** | classify the retrieved evidence (risk / opportunity / trend) | ✅ Built |
+| **Decide** | judge if evidence is enough; reformulate & search again if not (capped loop) | ✅ Built |
+| **Recommend** | structured, evidence-based recommendation | ✅ Built (reuses Task 5/6 prompt) |
+| **Validate** | check the recommendation is grounded in evidence; redo if not | ✅ Built |
+| **Memory** | resolve follow-up questions ("what about that?") using conversation history | ✅ Built |
+| **Orchestrator** | tie the loop together (`run_agent`), all steps shown | ✅ Built |
 
 ---
 
