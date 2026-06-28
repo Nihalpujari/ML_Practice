@@ -108,49 +108,39 @@ into the dashboard's live chat. Every step prints its reasoning (transparency).
 
 ```mermaid
 flowchart TD
-    subgraph SOURCES[Public Sources]
-        N[News media]
-        R[Reddit / community]
-        CMP[Competitor coverage]
-        CO[Company official site]
+    %% ---- RUN TIME: the agent reads top-to-bottom, in order ----
+    GOAL([Goal: CEO question]) --> PLAN[1 - PLAN<br/>break goal into specific sub-questions]
+    PLAN --> RETR[2 - RETRIEVE<br/>run all 3 tools, dedup,<br/>best-k by consensus]
+    RETR --> ANALYZE[3 - ANALYZE<br/>classify the evidence<br/>risk / opportunity / trend]
+    ANALYZE --> DECIDE{4 - DECIDE<br/>enough evidence?}
+    DECIDE -->|no - reformulate| PLAN
+    DECIDE -->|yes| RECOMMEND[5 - RECOMMEND<br/>Ollama llama3.1:8b<br/>structured JSON]
+    RECOMMEND --> VALIDATE{6 - VALIDATE<br/>grounded in evidence?}
+    VALIDATE -->|no - redo| RECOMMEND
+    VALIDATE -->|yes| RECS[(recommendations.json)]
+    RECS --> BRIEF[7 - DELIVER<br/>CEO briefing + dashboard]
+    BRIEF --> DASH[Executive Dashboard<br/>Streamlit · 8 pages · live agent chat]
+
+    %% ---- BUILD TIME: knowledge base, built once BEFORE the agent runs ----
+    subgraph KB[Knowledge base — built once, before the agent runs]
+        SOURCES[Public sources<br/>news / Reddit / competitors / company] -->|DDGS web search| COLLECT[Task 1: Collector<br/>clean + de-duplicate]
+        COLLECT --> JSON[(lufthansa_data.json<br/>clean docs)]
+        JSON -->|embed all-MiniLM-L6-v2| CHROMA[(ChromaDB vectors)]
+        JSON -->|word tokens| BM25IDX[(BM25 index)]
+        JSON -->|zero-shot classify| INTEL[Task 4: Classifier<br/>risk / opportunity / trend<br/>+ sentiment + severity]
+        INTEL --> LABELED[(lufthansa_labeled.json)]
+        CHROMA --> SEM[Semantic search]
+        CHROMA --> HYB[Hybrid search]
+        BM25IDX --> BM[BM25 search]
+        BM25IDX --> HYB
     end
 
-    SOURCES -->|DDGS web search| COLLECT[Task 1: Collector<br/>clean + de-duplicate]
-    COLLECT --> JSON[(lufthansa_data.json<br/>185 clean docs)]
-
-    JSON -->|embed all-MiniLM-L6-v2| CHROMA[(ChromaDB<br/>vectors)]
-    JSON -->|word tokens| BM25IDX[(BM25 index)]
-    JSON -->|zero-shot classify| INTEL[Task 4: Classifier<br/>risk / opportunity / trend<br/>+ sentiment + severity]
-    INTEL --> LABELED[(lufthansa_labeled.json)]
-
-    CHROMA --> SEM[Semantic search]
-    BM25IDX --> BM[BM25 search]
-    CHROMA --> HYB[Hybrid search]
-    BM25IDX --> HYB
-
-    subgraph AGENT[AI Agent — runs per question]
-        GOAL([Goal: CEO question]) --> PLAN[1 - PLAN<br/>break goal into<br/>specific sub-questions]
-        PLAN --> RETR[2 - RETRIEVE<br/>per sub-question: run all 3 tools<br/>dedup + best-k by consensus]
-        RETR --> ANALYZE[3 - ANALYZE<br/>classify the evidence<br/>risk / opportunity / trend]
-        ANALYZE --> DECIDE{4 - DECIDE<br/>enough evidence?}
-        DECIDE -->|no - reformulate| PLAN
-        DECIDE -->|yes| RECOMMEND[5 - RECOMMEND<br/>Ollama llama3.1:8b<br/>structured JSON]
-        RECOMMEND --> VALIDATE{6 - VALIDATE<br/>grounded in evidence?}
-        VALIDATE -->|no - redo| RECOMMEND
-        VALIDATE -->|yes| RECS[(recommendations.json)]
-    end
-
+    %% ---- the build feeds the agent: 3 retrieval tools + labels + memory ----
     SEM -. tool .-> RETR
     BM  -. tool .-> RETR
     HYB -. tool .-> RETR
-    INTEL -. labels .-> ANALYZE
+    LABELED -. labels .-> ANALYZE
     MEM[(conversation memory)] -. context .-> PLAN
-
-    RECS --> BRIEF[Section 7: CEO Briefing]
-    BRIEF --> CB[(ceo_briefing.json)]
-    LABELED --> DASH[Executive Dashboard<br/>Streamlit · 8 pages<br/>+ live agent chat]
-    RECS --> DASH
-    CB --> DASH
 ```
 
 > **Accuracy notes (matches the code):** Cleaning happens **once at collection** (Task 1), so `lufthansa_data.json` is already clean (185 docs). **Task 4** saves, per document: `category` + its zero-shot **confidence** (`category_score`), 3-class **sentiment**, and a zero-shot **severity** for risks; the LLM rates each opportunity's **impact** (High / Medium / Low). The **agent** treats all three retrievers — *semantic*, *BM25*, and *hybrid* — as **tools**: for each planned sub-question it runs all three, pools the results, dedups by URL, and keeps the best documents by **consensus** (documents found by more methods rank higher). The Analyze step reads the Task-4 labels of the retrieved docs.
