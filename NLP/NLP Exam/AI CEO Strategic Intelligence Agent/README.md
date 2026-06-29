@@ -69,7 +69,7 @@ into the dashboard's live chat. Every step prints its reasoning (transparency).
 ## Features
 
 - **Automatic live data collection** from multiple independent public sources
-- **≥ 100 documents** collected, cleaned, de-duplicated, and stored (**185** after cleaning)
+- **≥ 100 documents** collected, cleaned, de-duplicated, and stored (**341** after cleaning)
 - **Vector knowledge base** with semantic search (ChromaDB)
 - **Hybrid retrieval** combining keyword (BM25) and semantic (embeddings) search
 - **Zero-shot classification** of each document into Opportunity / Risk / Trend
@@ -78,7 +78,7 @@ into the dashboard's live chat. Every step prints its reasoning (transparency).
 - **Evidence-based recommendations** with supporting sources, expected impact, and risk
 - **Executive dashboard** (Streamlit) — 8 pages: Overview · Market Intelligence · Opportunities ·
   Risks · Trends · Sentiment · Recommendations · CEO Briefing
-- **Live "Ask the AI CEO" chat** — a floating widget that runs the full RAG agent on any question
+- **Live "Ask the AI CEO" chat** — a floating widget that runs the full agent on any question
   the user types, returning a grounded, structured recommendation with clickable sources
 
 ---
@@ -143,7 +143,7 @@ flowchart TD
     MEM[(conversation memory)] -. context .-> PLAN
 ```
 
-> **Accuracy notes (matches the code):** Cleaning happens **once at collection** (Task 1), so `lufthansa_data.json` is already clean (185 docs). **Task 4** saves, per document: `category` + its zero-shot **confidence** (`category_score`), 3-class **sentiment**, and a zero-shot **severity** for risks; the LLM rates each opportunity's **impact** (High / Medium / Low). The **agent** treats all three retrievers — *semantic*, *BM25*, and *hybrid* — as **tools**: for each planned sub-question it runs all three, pools the results, dedups by URL, and keeps the best documents by **consensus** (documents found by more methods rank higher). The Analyze step reads the Task-4 labels of the retrieved docs.
+> **Accuracy notes (matches the code):** Cleaning happens **once at collection** (Task 1), so `lufthansa_data.json` is already clean (341 docs). **Task 4** saves, per document: `category` + its zero-shot **confidence** (`category_score`), 3-class **sentiment**, and a zero-shot **severity** for risks; the LLM rates each opportunity's **impact** (High / Medium / Low). The **agent** treats all three retrievers — *semantic*, *BM25*, and *hybrid* — as **tools**: for each planned sub-question it runs all three, pools the results, dedups by URL, and keeps the best documents by **consensus** (documents found by more methods rank higher). The Analyze step reads the Task-4 labels of the retrieved docs.
 
 ---
 
@@ -276,9 +276,9 @@ positive/negative and was trained on movie reviews, so it forced neutral, factua
 listings) into positive/negative with misleadingly high confidence. Switched to
 `cardiffnlp/twitter-roberta-base-sentiment-latest` (negative/neutral/positive, trained on social
 text) so neutral documents are correctly labeled neutral — confirmed by the result distribution
-(neutral 111, positive 54, negative 20).
+(neutral 207, positive 95, negative 39).
 
-**12. Small models for labeling, LLM for reasoning.** Classification/sentiment over ~185 docs needs
+**12. Small models for labeling, LLM for reasoning.** Classification/sentiment over ~341 docs needs
 speed, not reasoning — small specialized models are ideal. The 8B LLM is reserved for Task 5, where
 the system must read evidence, reason, and *write* justified recommendations — something classifiers
 cannot do.
@@ -303,22 +303,23 @@ would produce nonsense like "positive risks." The Risk page therefore filters by
 this risk coming from?* — news / competitor / community), while **Trends** and **Opportunities** filter
 by **sentiment** (a "positive vs negative trend" is a genuine, useful distinction).
 
-**17. The agent uses semantic retrieval — chosen by evaluation, not assumption.** Hybrid search is
-built and tested, but the agent calls `collection.query` (semantic). This was verified, not assumed:
-- *Overlap:* semantic vs hybrid share only ~1–2 of 5 top documents, semantic vs BM25 just 0.4/5 — the
-  methods retrieve different evidence.
+**17. The agent retrieves with all three tools and fuses them by consensus — backed by evaluation.**
+The agent does not bet on a single retriever; for each planned sub-question it runs **semantic, BM25,
+and hybrid**, pools the results, dedups by URL, and keeps the documents they **agree on** (ranked by how
+many methods found each doc, tie-broken by average rank). This consensus design is justified by
+evaluation showing the three methods are **complementary, not redundant**:
+- *Overlap:* semantic vs hybrid share only ~1–2 of 5 top documents, semantic vs BM25 just ~0.4/5 — the
+  methods retrieve **different evidence**.
 - *Relevance:* scoring each retriever's top-5 against the Task-4 category labels gave semantic 6, hybrid
-  7, BM25 5 (of 20) — **comparable, no clear winner**, and which wins is question-dependent.
-- *End-to-end:* running the full agent on the same question with semantic vs hybrid produced **essentially
-  the same recommendation** (same action, same risk level, same cited evidence) — the LLM extracts the
-  dominant theme from any reasonable top-5, so the upstream difference washes out.
+  7, BM25 5 (of 20) — **comparable, no single winner**, and which wins is question-dependent.
 
-Since the **output is the same**, the choice comes down to **cost**: semantic is a single ChromaDB call
-with no extra keyword index and no `alpha` to justify, whereas hybrid adds moving parts for an identical
-result. So the agent uses semantic, and hybrid is kept as **insurance** — for keyword-heavy data
-(full articles, exact model numbers) BM25's literal matching would matter, and switching it in is a
-one-line change. Short DDGS *snippets* (few keywords) also favour semantic. *(Fully adaptive **query
-routing** — pick the retriever per question type — is noted as future work.)*
+Because no method dominates and each surfaces documents the others miss, **fusing all three by consensus
+is more robust than choosing one**: a document found by multiple methods is a higher-confidence result,
+and a strong single-method match (e.g. BM25 on an exact model number like "A350-1000") still survives the
+vote rather than being averaged away by a blend. The cost is ~3× the retrieval calls per sub-question —
+acceptable for an interactive agent. *(The pre-generated `recommendations.json` was produced earlier by a
+simpler semantic-only pass; the live agent uses the consensus retriever. Fully adaptive **query routing**
+— pick the retriever per question type instead of always fusing — is noted as future work.)*
 
 ---
 
@@ -339,7 +340,7 @@ AI CEO Strategic Intelligence Agent/
 ├── app.py                              # Executive dashboard (Streamlit) — 8 pages + live agent chat
 │
 ├── data/                               # all JSON data
-│   ├── lufthansa_data.json             #   185 clean, deduped docs (Task 1 output)
+│   ├── lufthansa_data.json             #   341 clean, deduped docs (Task 1 output)
 │   ├── lufthansa_labeled.json          #   same docs + category / sentiment / severity (Task 4 output)
 │   ├── recommendations.json            #   pre-generated CEO recommendations (Task 5/6)
 │   └── ceo_briefing.json               #   executive summary (Section 7)
@@ -371,7 +372,7 @@ ollama pull llama3.1:8b
 ## How to Run
 
 ```bash
-# Task 1 — collect data            → produces lufthansa_data.json (185 clean docs)
+# Task 1 — collect data            → produces lufthansa_data.json (341 clean docs)
 #   run: Data Collection.ipynb
 
 # Task 2/3 — build knowledge base  → produces chroma_db/ + retrieval functions
