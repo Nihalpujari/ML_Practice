@@ -785,6 +785,12 @@ with st.popover("💬", use_container_width=False):
         sent = st.form_submit_button("Ask  ➤", use_container_width=True)
 
     if sent and question:
+        # =====================================================================
+        #  THE 7-STEP AGENT RUNS HERE. run_agent() (in agent.py) executes:
+        #    STEP 1 RESOLVE → STEP 2 PLAN → STEP 3 RETRIEVE → STEP 4 ANALYZE
+        #    → STEP 5 DECIDE (loop) → STEP 6 RECOMMEND → STEP 7 VALIDATE
+        #  history = short-term memory; max_tries=1 = one self-correction (fast live chat)
+        # =====================================================================
         with st.spinner("🧠 Planning → retrieving → analyzing → deciding → recommending → validating… (a few min on CPU)"):
             rec = run_agent(question, history=st.session_state.chat_history, max_tries=1)
         st.session_state.chat_history.append(rec)

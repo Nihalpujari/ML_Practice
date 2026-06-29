@@ -7,7 +7,17 @@ from retrieval import semantic_search, bm25_search, hybrid_search, docs as label
 # lookup table: URL -> full labeled doc (used by the Analyze step)
 label_by_url = {d["url"]: d for d in labeled_docs}
 
+# =============================================================================
+#  THE 7-STEP AGENT PIPELINE  (executes in this order inside run_agent below):
+#    STEP 1 RESOLVE  → STEP 2 PLAN → STEP 3 RETRIEVE → STEP 4 ANALYZE
+#    → STEP 5 DECIDE → STEP 6 RECOMMEND → STEP 7 VALIDATE
+#  NOTE: the functions are NOT written in step order — follow the STEP banners.
+# =============================================================================
 
+
+# .............................................................................
+# STEP 3 : RETRIEVE (part A) — run 3 tools, dedup by URL, keep best-k by consensus
+# .............................................................................
 def retrieve_evidence(query, k_each=5, final_k=5):
     """Run all 3 retrievers, pool results, dedup by URL, keep the best by consensus."""
     methods = {
@@ -27,6 +37,9 @@ def retrieve_evidence(query, k_each=5, final_k=5):
     return [x["doc"] for x in ranked[:final_k]]
 
 
+# .............................................................................
+# STEP 2 : PLAN — break the broad goal into 2-4 specific sub-questions
+# .............................................................................
 def make_plan(goal):
     """Break the abstract goal into specific, searchable sub-questions."""
     system = (
@@ -44,6 +57,9 @@ def make_plan(goal):
     return json.loads(res["message"]["content"])["steps"]
 
 
+# .............................................................................
+# STEP 2 + 3 : PLAN then RETRIEVE (part B) — plan, retrieve per sub-question, pool + dedup
+# .............................................................................
 def gather_evidence(goal, final_per_step=4):
     """Plan the goal, retrieve for each sub-question, pool + dedup the evidence."""
     plan = make_plan(goal)
@@ -60,6 +76,9 @@ def gather_evidence(goal, final_per_step=4):
     return unique
 
 
+# .............................................................................
+# STEP 4 : ANALYZE — attach each doc's risk/opportunity/trend label + tally
+# .............................................................................
 def analyze(evidence):
     """Attach each doc's Task-4 label (by URL) and summarize what we found."""
     for d in evidence:
@@ -72,6 +91,9 @@ def analyze(evidence):
     return evidence, counts
 
 
+# .............................................................................
+# STEP 5 : DECIDE — LLM judges whether the evidence is ENOUGH to answer
+# .............................................................................
 def decide_enough(goal, evidence, counts):
     """Ask the LLM whether the evidence found is enough to answer the goal."""
     summary = ", ".join(f"{n} {cat}" for cat, n in counts.items())
@@ -92,6 +114,9 @@ def decide_enough(goal, evidence, counts):
     return json.loads(res["message"]["content"])
 
 
+# .............................................................................
+# STEP 5 (helper) : REFORMULATE — sharpen the query when DECIDE said "not enough"
+# .............................................................................
 def reformulate(goal, reason):
     """Rewrite the question to be more specific when the evidence was insufficient."""
     system = (
@@ -108,6 +133,9 @@ def reformulate(goal, reason):
     return json.loads(res["message"]["content"])["new_goal"]
 
 
+# .............................................................................
+# STEP 6 : RECOMMEND — write the structured, grounded recommendation (JSON)
+# .............................................................................
 def recommend(goal, evidence):
     """Generate the structured recommendation from the analyzed evidence."""
     context = "\n\n".join(
@@ -135,6 +163,9 @@ Return a JSON object with EXACTLY these keys:
     return rec
 
 
+# .............................................................................
+# STEP 7 : VALIDATE — LLM checks the recommendation is grounded (no hallucination)
+# .............................................................................
 def validate(rec, evidence):
     """Check the recommendation is grounded in the evidence (no invented facts)."""
     ev = " | ".join(d["text"][:500] for d in evidence)
@@ -156,6 +187,9 @@ def validate(rec, evidence):
     return json.loads(res["message"]["content"])
 
 
+# .............................................................................
+# STEP 1 : RESOLVE — use memory to rewrite a follow-up into a standalone question
+# .............................................................................
 def resolve_goal(goal, history):
     """Use conversation history to rewrite a follow-up into a standalone question."""
     if not history:
@@ -176,35 +210,45 @@ def resolve_goal(goal, history):
     return json.loads(res["message"]["content"])["goal"]
 
 
+# =============================================================================
+#  ORCHESTRATOR — calls the 7 steps IN ORDER and controls the loops
+# =============================================================================
 def run_agent(goal, history=None, max_tries=2):
     """The full agent: resolve → plan → retrieve → analyze → decide (loop) → recommend → validate."""
+    # ---- STEP 1 : RESOLVE (memory) ----
     goal = resolve_goal(goal, history)
     print(f"\n🎯 GOAL: {goal}\n")
 
+    # ---- STEP 2 + 3 : PLAN then RETRIEVE (gather_evidence does both) ----
     evidence = gather_evidence(goal)
+    # ---- STEP 4 : ANALYZE (attach labels + tally) ----
     analyzed, counts = analyze(evidence)
+    # ---- STEP 5 : DECIDE (enough evidence?) ----
     verdict = decide_enough(goal, analyzed, counts)
     print("🤔 DECIDE:", verdict["sufficient"], "—", verdict["reason"])
 
+    # ---- STEP 5 (loop) : if NOT enough → reformulate + retrieve again (capped) ----
     tries = 0
     while not verdict["sufficient"] and tries < max_tries:
         print(f"\n🔄 Not enough — reformulating (try {tries+1}/{max_tries})")
         sharper = reformulate(goal, verdict["reason"])
-        evidence += gather_evidence(sharper)
-        evidence = list({d["url"]: d for d in evidence}.values())
+        evidence += gather_evidence(sharper)                     # ADD, don't replace
+        evidence = list({d["url"]: d for d in evidence}.values())  # dedup
         analyzed, counts = analyze(evidence)
         verdict = decide_enough(goal, analyzed, counts)
         print("🤔 DECIDE:", verdict["sufficient"], "—", verdict["reason"])
         tries += 1
 
+    # ---- STEP 6 : RECOMMEND (write the grounded answer) ----
     print(f"\n📝 RECOMMENDING on {len(evidence)} docs...")
     rec = recommend(goal, analyzed)
 
+    # ---- STEP 7 : VALIDATE (grounded? if not, redo once) ----
     check = validate(rec, analyzed)
     print("🛡️ VALIDATE:", check)
     if not check["valid"]:
         print("   ↻ regenerating...")
         rec = recommend(goal, analyzed)
 
-    rec["evidence_sufficient"] = verdict["sufficient"]
+    rec["evidence_sufficient"] = verdict["sufficient"]   # honest flag for the dashboard
     return rec
