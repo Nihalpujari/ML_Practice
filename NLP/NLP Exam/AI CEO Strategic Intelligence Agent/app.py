@@ -158,40 +158,6 @@ def _txt(v):
         return "; ".join(_txt(x) for x in v)
     return str(v)
 
-
-# ─────────────────────────────────────────────────────────────────────────────
-# CEO AGENT  (RAG pipeline — retrieve → prompt → generate → parse)
-# ─────────────────────────────────────────────────────────────────────────────
-def ceo_agent(question, k=5):
-    results   = collection.query(query_texts=[question], n_results=k)
-    retrieved = results["documents"][0]
-    metas     = results["metadatas"][0]
-    context   = "\n\n".join(f"[{m['source']}] {doc}" for doc, m in zip(retrieved, metas))
-
-    system_prompt = """You are a strategic advisor to the CEO of Lufthansa.
-Use ONLY the evidence provided — do not invent facts.
-Return a JSON object with EXACTLY these keys:
-- "recommendation": one clear strategic action (string)
-- "justification": 1-2 sentences explaining WHY this recommendation follows from the evidence
-- "supporting_evidence": list of 2-3 short evidence points from the context
-- "expected_impact": expected business impact (string)
-- "risk_level": one of "High", "Medium", "Low"
-- "priority": one of "High", "Medium", "Low"
-"""
-    response = ollama.chat(
-        model="llama3.1:8b",
-        messages=[
-            {"role": "system", "content": system_prompt},
-            {"role": "user",   "content": f"Evidence:\n{context}\n\nQuestion: {question}"},
-        ],
-        format="json"
-    )
-    rec = json.loads(response["message"]["content"])
-    rec["question"] = question
-    rec["sources"]  = [m["url"] for m in metas]
-    return rec
-
-
 # ─────────────────────────────────────────────────────────────────────────────
 # CHAT SESSION STATE
 # ─────────────────────────────────────────────────────────────────────────────
@@ -511,7 +477,7 @@ elif page == "📰 Market Intelligence":
     tech_docs    = [d for d in docs if d.get("category") == "trend"]   # emerging tech / trends
 
     tab_news, tab_comp, tab_tech, tab_company, tab_comm = st.tabs([
-        f"📰 Recent news ({len(news_docs)})",
+        f"📰 news ({len(news_docs)})",
         f"🏢 Competitor activity ({len(comp_docs)})",
         f"📈 Emerging tech ({len(tech_docs)})",
         f"✈️ Company announcements ({len(company_docs)})",
