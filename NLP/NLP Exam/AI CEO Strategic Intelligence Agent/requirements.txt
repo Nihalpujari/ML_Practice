@@ -20,6 +20,11 @@ torch==2.5.1                  # backend for transformers / sentence-transformers
 # --- Task 5/6: reasoning LLM ---
 ollama==0.6.2                 # Python client for the local Ollama server (llama3.1:8b)
 
+# --- Deployment ONLY (Streamlit Cloud) — used only by streamlit_app.py ---
+# Lets the public chatbot call Groq's free hosted Llama 3.1 8B when GROQ_API_KEY is set.
+# The local app.py is UNAFFECTED (it still uses Ollama).
+groq>=0.11.0
+
 # --- Dashboard + utilities ---
 streamlit==1.58.0             # executive dashboard (app.py)
 matplotlib==3.10.9            # charts

@@ -15,6 +15,8 @@ black box.
 > **The goal is not information retrieval. The goal is strategic decision-making.**
 > The system is built to answer: *"If you were the CEO today, what would you do next and why?"*
 
+🔴 **Live demo:** **[ai-agent-lufthansa-airlines.streamlit.app](https://ai-agent-lufthansa-airlines.streamlit.app/)** — open the floating 💬 *"Ask the AI CEO"* chat (bottom-right) and ask a question; it runs the full agent live.
+
 ---
 
 ## Table of Contents
@@ -22,31 +24,19 @@ black box.
 2. [Features](#features)
 3. [Technology Stack](#technology-stack)
 4. [System Architecture](#system-architecture-diagram)
-5. [Data Flow](#data-flow-diagram)
-6. [AI Pipeline](#ai-pipeline)
-7. [Design Decisions](#design-decisions)
-8. [Project Structure](#project-structure)
-9. [Setup & Installation](#setup--installation)
-10. [How to Run](#how-to-run)
-11. [Limitations & Future Work](#limitations--future-work)
+5. [AI Agent Workflow](#ai-agent-workflow)
+6. [Data Flow](#data-flow-diagram)
+7. [AI Pipeline](#ai-pipeline)
+8. [Design Decisions](#design-decisions)
+9. [Project Structure](#project-structure)
+10. [Setup & Installation](#setup--installation)
+11. [How to Run](#how-to-run)
+12. [Deployment](#deployment-optional)
+13. [Limitations & Future Work](#limitations--future-work)
 
 ---
 
-## Status
-
-| Component | Status |
-|-----------|--------|
-| Task 1 — Live Data Collection | ✅ Done |
-| Task 2 — Knowledge Repository (store + index) | ✅ Done |
-| Task 3 — Information Processing (clean + embed) | ✅ Done (folded into Task 2) |
-| Retrieval Layer — Semantic + Hybrid (BM25 + dense) | ✅ Done |
-| Task 4 — Strategic Intelligence Engine (classify + sentiment) | ✅ Done |
-| Task 5 & 6 — AI CEO Agent + Evidence-Based Recommendations | ✅ Done |
-| Section 7 — CEO Briefing (executive summary) | ✅ Done |
-| Executive Dashboard (Streamlit, 8 pages + live chat) | ✅ Done |
-| Dashboard bonus — Semantic vs Hybrid comparison panel | ⚪ Optional |
-
-### Agentic Upgrade (for the 30 June retake) — ✅ COMPLETE
+### Agentic Upgrade 
 
 The system has been extended from a single-pass RAG pipeline into a full **AI agent** with explicit
 planning, multi-tool use, self-correction, memory, and validation — a **Goal → Plan → Retrieve →
@@ -100,7 +90,8 @@ into the dashboard's live chat. Every step prints its reasoning (transparency).
 | Visualization | **matplotlib** | charts |
 
 > **No paid commercial LLM APIs are used.** The reasoning engine is a local, open-source model
-> served via Ollama, satisfying the project constraint.
+> served via Ollama, satisfying the project constraint. *(The optional public deployment swaps in
+> **Groq's free hosted Llama 3.1 8B** — the same open model, still no paid API; see [Deployment](#deployment-optional).)*
 
 ---
 
@@ -114,7 +105,7 @@ flowchart TD
     RETR --> ANALYZE[3 - ANALYZE<br/>classify the evidence<br/>risk / opportunity / trend]
     ANALYZE --> DECIDE{4 - DECIDE<br/>enough evidence?}
     DECIDE -->|no - reformulate| PLAN
-    DECIDE -->|yes| RECOMMEND[5 - RECOMMEND<br/>Ollama llama3.1:8b<br/>structured JSON]
+    DECIDE -->|yes| RECOMMEND[5 - RECOMMEND<br/>Llama 3.1 8B<br/>structured JSON]
     RECOMMEND --> VALIDATE{6 - VALIDATE<br/>grounded in evidence?}
     VALIDATE -->|no - redo| RECOMMEND
     VALIDATE -->|yes| RECS[(recommendations.json)]
@@ -338,6 +329,8 @@ AI CEO Strategic Intelligence Agent/
 ├── retrieval.py                        # the 3 retrieval tools (semantic / BM25 / hybrid)
 ├── agent.py                            # the AI agent — run_agent() (Goal→Plan→Retrieve→Analyze→Decide→Recommend→Validate)
 ├── app.py                              # Executive dashboard (Streamlit) — 8 pages + live agent chat
+├── streamlit_app.py                    # deployment entry point — routes LLM to Groq (see DEPLOY.md); local code unchanged
+├── DEPLOY.md                           # step-by-step public deployment guide (Streamlit Cloud + Groq)
 │
 ├── data/                               # all JSON data
 │   ├── lufthansa_data.json             #   341 clean, deduped docs (Task 1 output)
@@ -391,6 +384,42 @@ streamlit run app.py
 > The dashboard loads the saved JSON artifacts, so it opens instantly. The floating **"Ask the AI CEO"**
 > chat is the only feature that calls the LLM live — it needs **Ollama running** (`ollama serve`) with
 > `llama3.1:8b` pulled.
+
+---
+
+## Deployment (optional)
+
+The system runs locally on **Ollama** by design — open-source, private, offline (no paid APIs). For a
+public URL with a **working chatbot**, an *additive* entry point — **`streamlit_app.py`** — redirects the
+agent's LLM calls to **Groq's free hosted Llama 3.1 8B** and runs the *same* dashboard on top. The core
+code (`app.py` / `agent.py` / `retrieval.py`) is **unchanged** — only *where* the LLM runs differs.
+
+**Deployment architecture** — this is the *hosting* view, separate from the agent-logic diagram above:
+
+```mermaid
+flowchart LR
+    subgraph RUN[How it runs]
+        direction TB
+        L[LOCAL — exam / demo<br/>streamlit run app.py]
+        D[DEPLOYED — Streamlit Cloud<br/>streamlit_app.py wrapper]
+    end
+
+    L --> APP[app.py + run_agent<br/>SAME code both ways]
+    D --> APP
+    APP -->|LLM calls| BACKEND{{LLM backend — swappable}}
+    BACKEND -->|local| OL[(Ollama · llama3.1:8b)]
+    BACKEND -->|deployed| GQ[(Groq · llama-3.1-8b-instant<br/>free, hosted)]
+```
+
+> The core flow (`app.py` → `run_agent`) is the **same** everywhere — only the **LLM backend** is
+> swapped: locally **Ollama**, when deployed **Groq** (via `streamlit_app.py`).
+
+| | LLM backend | Run with |
+|---|---|---|
+| **Local (exam / demo)** | Ollama `llama3.1:8b` | `streamlit run app.py` |
+| **Deployed (Streamlit Cloud)** | Groq `llama-3.1-8b-instant` (free) | `streamlit_app.py` + a `GROQ_API_KEY` secret |
+
+Full step-by-step in **[DEPLOY.md](DEPLOY.md)**.
 
 ---
 
