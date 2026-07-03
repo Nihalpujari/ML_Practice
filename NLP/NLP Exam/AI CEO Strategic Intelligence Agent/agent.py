@@ -36,7 +36,7 @@ def retrieve_evidence(query, k_each=5, final_k=5):
     ranked = sorted(seen.values(), key=lambda x: (-x["hits"], x["rank_sum"]))
     return [x["doc"] for x in ranked[:final_k]]
 
-
+akka ga kodu phone
 # .............................................................................
 # STEP 2 : PLAN — break the broad goal into 2-4 specific sub-questions
 # .............................................................................
