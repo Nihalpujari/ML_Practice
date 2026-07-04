@@ -40,8 +40,10 @@ ML_Practice/
 ├── ⚙️  Hyperparameter tuning/  GridSearchCV & RandomizedSearchCV
 ├── 🗣️  NLP/                    Text processing, embeddings, transformers, RAG & agents
 ├── 🔤 NLP using spaCy/         Getting started with spaCy models
+├── 🔎 RAG deep dive/           RAG from scratch + LangChain / LangGraph
 ├── 🚢 Titanic/                 End-to-end Kaggle-style project
 ├── 🌍 real data/               Practice on real-world scraped datasets
+├── 📦 datasets/                Shared CSV datasets used across the folders
 ├── 📓 all.ipynb                Consolidated multi-experiment notebook
 └── 📓 Common Deep Learning     Common deep learning hyperparameters reference
        Hyper-Parameters.ipynb
@@ -158,6 +160,17 @@ flowchart TD
 - RAG (Retrieval-Augmented Generation) pipelines
 - LLM Agents — research, analyst, support, LangChain, LangGraph
 - Mini projects: movie recommender, WhatsApp chat analysis, job applications
+
+</details>
+
+<details>
+<summary><b>🔎 RAG Deep Dive (LangChain / LangGraph)</b></summary>
+
+- Tokenization refresher (BPE / WordPiece)
+- **RAG from scratch** — load → split → embed → store → retrieve → augment → generate
+- **LangChain** fundamentals — the `Runnable` abstraction, the LCEL pipe (`|`), prompts, parsers
+- Toward **LangGraph** — linear chains vs looping, stateful agent graphs
+- Runs free/local by swapping OpenAI for **Ollama**
 
 </details>
 
